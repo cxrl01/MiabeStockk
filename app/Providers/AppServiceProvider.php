@@ -9,6 +9,7 @@ use App\Policies\CategoriePolicy;
 use App\Policies\ProduitPolicy;
 use App\Policies\VentePolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -33,6 +34,20 @@ class AppServiceProvider extends ServiceProvider
             return config('app.url')
                 . '/reinitialiser-mot-de-passe?token=' . $token
                 . '&email=' . urlencode($user->email);
+        });
+
+        // Contenu du mail en français, cohérent avec le reste de l'appli
+        // (au lieu du texte anglais par défaut de Laravel). Hérite
+        // automatiquement du thème MiabéStock déjà personnalisé
+        // (resources/views/vendor/mail/html/themes/default.css).
+        ResetPassword::toMailUsing(function ($notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Réinitialisation de votre mot de passe — MiabéStock')
+                ->greeting('Bonjour ' . $notifiable->prenom . ',')
+                ->line('Vous recevez cet e-mail car une demande de réinitialisation de mot de passe a été faite pour votre compte.')
+                ->action('Réinitialiser mon mot de passe', $url)
+                ->line('Ce lien expirera dans 60 minutes.')
+                ->line('Si vous n\'êtes pas à l\'origine de cette demande, aucune action n\'est requise.');
         });
     }
 }
