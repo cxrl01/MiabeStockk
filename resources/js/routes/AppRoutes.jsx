@@ -3,11 +3,18 @@ import Home from '../pages/Home';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import ForgotPassword from '../pages/auth/ForgotPassword';
+import ResetPassword from '../pages/auth/ResetPassword';
 import Dashboard from '../pages/Dashboard';
+import Profil from '../pages/Profil';
+import VentesListe from '../pages/ventes/VentesListe';
+import NouvelleVente from '../pages/ventes/NouvelleVente';
+import VenteDetail from '../pages/ventes/VenteDetail';
+import ProduitsListe from '../pages/stock/ProduitsListe';
+import ProduitForm from '../pages/stock/ProduitForm';
+import ClientsListe from '../pages/clients/ClientsListe';
+import ClientForm from '../pages/clients/ClientForm';
 import PageAVenir from '../components/layout/PageAVenir';
 import ProtectedRoute from './ProtectedRoute';
-import ResetPassword from '../pages/auth/ResetPassword';
-import Profil from '../pages/Profil';
 
 export default function AppRoutes() {
   return (
@@ -17,13 +24,22 @@ export default function AppRoutes() {
       <Route path="/inscription" element={<Register />} />
       <Route path="/mot-de-passe-oublie" element={<ForgotPassword />} />
       <Route path="/reinitialiser-mot-de-passe" element={<ResetPassword />} />
-      <Route path="/profil" element={<ProtectedRoute><Profil /></ProtectedRoute>}/>
+      <Route path="/profil" element={<ProtectedRoute><Profil /></ProtectedRoute>} />
 
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
 
-      <Route path="/ventes" element={<ProtectedRoute><PageAVenir title="Ventes" /></ProtectedRoute>} />
-      <Route path="/stock" element={<ProtectedRoute><PageAVenir title="Stock" /></ProtectedRoute>} />
-      <Route path="/clients" element={<ProtectedRoute><PageAVenir title="Clients" /></ProtectedRoute>} />
+      <Route path="/ventes" element={<ProtectedRoute><VentesListe /></ProtectedRoute>} />
+      <Route path="/ventes/nouvelle" element={<ProtectedRoute><NouvelleVente /></ProtectedRoute>} />
+      <Route path="/ventes/:id" element={<ProtectedRoute><VenteDetail /></ProtectedRoute>} />
+
+      <Route path="/stock" element={<ProtectedRoute><ProduitsListe /></ProtectedRoute>} />
+      <Route path="/stock/nouveau" element={<ProtectedRoute><ProduitForm /></ProtectedRoute>} />
+      <Route path="/stock/:id/modifier" element={<ProtectedRoute><ProduitForm /></ProtectedRoute>} />
+
+      <Route path="/clients" element={<ProtectedRoute><ClientsListe /></ProtectedRoute>} />
+      <Route path="/clients/nouveau" element={<ProtectedRoute><ClientForm /></ProtectedRoute>} />
+      <Route path="/clients/:id/modifier" element={<ProtectedRoute><ClientForm /></ProtectedRoute>} />
+
       <Route path="/fournisseurs" element={<ProtectedRoute><PageAVenir title="Fournisseurs" /></ProtectedRoute>} />
       <Route path="/equipe" element={<ProtectedRoute><PageAVenir title="Équipe" /></ProtectedRoute>} />
       <Route path="/depenses" element={<ProtectedRoute><PageAVenir title="Dépenses" /></ProtectedRoute>} />

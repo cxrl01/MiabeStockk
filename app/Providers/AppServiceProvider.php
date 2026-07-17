@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Models\Categorie;
+use App\Models\Client;
 use App\Models\Commande;
 use App\Models\Produit;
 use App\Policies\CategoriePolicy;
+use App\Policies\ClientPolicy;
 use App\Policies\ProduitPolicy;
 use App\Policies\VentePolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Commande::class, VentePolicy::class);
         Gate::policy(Categorie::class, CategoriePolicy::class);
         Gate::policy(Produit::class, ProduitPolicy::class);
+        Gate::policy(Client::class, ClientPolicy::class);
 
         // Le lien de réinitialisation doit pointer vers la SPA React
         // (pas de route Blade "password.reset" dans cette architecture).

@@ -46,6 +46,9 @@ class DashboardController extends Controller
             'produits_en_alerte' => $produitsQuery()
                 ->whereColumn('quantite_stock', '<=', 'seuil_alerte')
                 ->count(),
+            'ventes_impayees' => $ventesValideesQuery()
+                ->whereIn('statut_paiement', ['non_payee', 'partielle'])
+                ->count(),
             'dernieres_ventes' => Commande::query()
                 ->where('type', 'vente')
                 ->when($boutiqueIds, fn ($q) => $q->whereIn('boutique_id', $boutiqueIds))

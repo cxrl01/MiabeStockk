@@ -49,5 +49,7 @@ Route::prefix('v1')->group(function () {
         // Mouvements de stock : historique par produit + ajustement manuel.
         Route::get('/produits/{produit}/mouvements', [MouvementStockController::class, 'index']);
         Route::post('/produits/{produit}/ajuster-stock', [MouvementStockController::class, 'store']);
+
+        Route::apiResource('clients', \App\Http\Controllers\Api\V1\ClientController::class);
     });
 });
