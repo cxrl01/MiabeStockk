@@ -16,7 +16,13 @@ class RegisterRequest extends FormRequest
         return [
             'nom' => ['required', 'string', 'max:255'],
             'prenom' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
+            'email' => [
+                'required',
+                'email:rfc,dns',
+                'regex:/^[^@\s]+@[^@\s]+\.[^@\s]+$/',
+                'max:255',
+                'unique:users,email',
+            ],
             'telephone' => ['nullable', 'string', 'max:30'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'nom_boutique' => ['required', 'string', 'max:255'],
@@ -28,6 +34,8 @@ class RegisterRequest extends FormRequest
     {
         return [
             'multi_points_vente.required' => 'Indiquez si vous avez plusieurs points de vente.',
+            'email.regex' => 'L\'adresse email doit être complète (ex: nom@exemple.com).',
+            'email.dns' => 'Ce domaine d\'e-mail semble invalide ou inexistant.',
         ];
     }
 }
