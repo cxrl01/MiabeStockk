@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
+use App\Models\Paiement;
 use App\Traits\JournaliseActivite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class ClientController extends Controller
         $this->authorize('create', Client::class);
 
         $user = Auth::user();
-        $boutiqueId = $user->boutique_id ?? $request->integer('boutique_id');
+        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
 
         $client = Client::create([
             ...$request->validated(),
@@ -63,11 +64,32 @@ class ClientController extends Controller
         return response()->json($client, 201);
     }
 
+    /**
+     * Fiche client complète : infos + stats (total acheté, total réglé) +
+     * historique des ventes et des paiements, pour la page de détail.
+     */
     public function show(Client $client): JsonResponse
     {
         $this->authorize('view', $client);
 
-        return response()->json($client->load(['commandes' => fn ($q) => $q->latest()->limit(10)]));
+        $ventes = $client->commandes()
+            ->where('type', 'vente')
+            ->latest()
+            ->get(['id', 'numero', 'montant_ttc', 'montant_paye', 'statut', 'statut_paiement', 'created_at']);
+
+        $paiements = Paiement::query()
+            ->whereIn('commande_id', $ventes->pluck('id'))
+            ->with('commande:id,numero')
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'client' => $client,
+            'total_achete' => (float) $ventes->where('statut', 'validee')->sum('montant_ttc'),
+            'total_paye' => (float) $ventes->where('statut', 'validee')->sum('montant_paye'),
+            'ventes' => $ventes,
+            'paiements' => $paiements,
+        ]);
     }
 
     public function update(UpdateClientRequest $request, Client $client): JsonResponse

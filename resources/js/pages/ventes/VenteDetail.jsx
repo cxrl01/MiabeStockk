@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
@@ -29,6 +29,8 @@ export default function VenteDetail() {
   const [mode, setMode] = useState('especes');
   const [reference, setReference] = useState('');
   const [erreursPaiement, setErreursPaiement] = useState({});
+  const [chargementFacture, setChargementFacture] = useState(false);
+  const [recuEnCours, setRecuEnCours] = useState(null); // id du paiement en cours d'impression
 
   const chargerVente = () => {
     api.get(`/ventes/${id}`)
@@ -38,7 +40,12 @@ export default function VenteDetail() {
 
   useEffect(chargerVente, [id]);
 
-  const peutAnnuler = ['gerant', 'gestionnaire'].includes(user?.role?.nom);
+  // Tableau 6 du mémoire : "Annuler vente" n'apparaît que dans la liste du Gérant.
+  // Ni Commercial ni Gestionnaire ne l'ont.
+  const peutAnnuler = user?.role?.nom === 'gerant';
+  // "Encaisser" / "Générer PDF" = Gérant + Commercial uniquement. Le Gestionnaire
+  // peut consulter la vente (historique) mais pas encaisser ni imprimer la facture.
+  const peutVendre = ['gerant', 'commercial'].includes(user?.role?.nom);
   const solde = vente ? Number(vente.montant_ttc) - Number(vente.montant_paye) : 0;
 
   const annulerVente = async () => {
@@ -74,6 +81,49 @@ export default function VenteDetail() {
     }
   };
 
+  /**
+   * Récupère le PDF via l'instance axios déjà authentifiée (au lieu d'une navigation
+   * <a href> classique, qui n'envoie pas forcément le cookie de session Sanctum selon
+   * la config CORS/domaine en local), puis l'ouvre dans un nouvel onglet via un blob.
+   */
+  /**
+   * Même mécanisme que imprimerFacture, mais pour le reçu d'un paiement individuel
+   * (cas d'utilisation "Enregistrer un paiement" : une facture distincte par versement).
+   */
+  const imprimerRecu = async (paiementId) => {
+    setRecuEnCours(paiementId);
+    try {
+      const { data } = await api.get(`/paiements/${paiementId}/recu`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
+    } catch (error) {
+      setErreur(
+        error?.response?.status === 401
+          ? 'Session expirée, reconnectez-vous.'
+          : 'Impossible de générer le reçu.'
+      );
+    } finally {
+      setRecuEnCours(null);
+    }
+  };
+
+  const imprimerFacture = async () => {
+    setChargementFacture(true);
+    try {
+      const { data } = await api.get(`/ventes/${id}/facture`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
+    } catch (error) {
+      setErreur(
+        error?.response?.status === 401
+          ? 'Session expirée, reconnectez-vous.'
+          : "Impossible de générer la facture."
+      );
+    } finally {
+      setChargementFacture(false);
+    }
+  };
+
   if (erreur && !vente) {
     return (
       <AppShell title="Vente">
@@ -97,7 +147,6 @@ export default function VenteDetail() {
       </button>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Colonne principale */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-surface rounded-xl border border-ink900/10 p-5">
             <div className="flex items-center justify-between mb-4">
@@ -107,7 +156,17 @@ export default function VenteDetail() {
                   {formatDate(vente.created_at)} à {formatHeure(vente.created_at)}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3">
+                {peutVendre && (
+                  <button
+                    type="button"
+                    onClick={imprimerFacture}
+                    disabled={chargementFacture}
+                    className="text-sm font-medium text-indigo-700 hover:underline disabled:opacity-50"
+                  >
+                    {chargementFacture ? 'Génération…' : 'Imprimer'}
+                  </button>
+                )}
                 {vente.statut === 'annulee' ? (
                   <Badge statut="annulee" />
                 ) : (
@@ -158,7 +217,6 @@ export default function VenteDetail() {
           )}
         </div>
 
-        {/* Colonne paiements */}
         <div className="space-y-4">
           <div className="bg-surface rounded-xl border border-ink900/10 p-5">
             <h2 className="font-display font-semibold text-ink900 mb-3">Paiement</h2>
@@ -171,7 +229,7 @@ export default function VenteDetail() {
               <span className="font-mono text-danger">{formatMontant(solde)}</span>
             </div>
 
-            {vente.statut === 'validee' && solde > 0 && (
+            {peutVendre && vente.statut === 'validee' && solde > 0 && (
               <>
                 {!formPaiementOuvert ? (
                   <Button variant="boutique" className="w-full text-sm" onClick={() => setFormPaiementOuvert(true)}>
@@ -230,9 +288,19 @@ export default function VenteDetail() {
               <div>
                 {vente.paiements.map((p, i) => (
                   <div key={p.id}>
-                    <div className="flex justify-between text-sm py-2">
+                    <div className="flex items-center justify-between text-sm py-2 gap-2">
                       <span className="text-ink900/60">{formatDate(p.created_at)}</span>
                       <span className="font-mono text-ink900">{formatMontant(p.montant)}</span>
+                      {peutVendre && (
+                        <button
+                          type="button"
+                          onClick={() => imprimerRecu(p.id)}
+                          disabled={recuEnCours === p.id}
+                          className="text-xs font-medium text-indigo-700 hover:underline disabled:opacity-50 shrink-0"
+                        >
+                          {recuEnCours === p.id ? '…' : 'Reçu'}
+                        </button>
+                      )}
                     </div>
                     {i < vente.paiements.length - 1 && <TearLine className="text-ink900/10" />}
                   </div>

@@ -15,7 +15,7 @@ class Produit extends Model
 
     protected $fillable = [
         'boutique_id', 'categorie_id', 'nom', 'reference',
-        'prix_achat', 'prix_vente', 'taux_tva', 'quantite_stock', 'seuil_alerte',
+        'prix_achat', 'prix_vente', 'quantite_stock', 'seuil_alerte',
     ];
 
     protected function casts(): array
@@ -23,7 +23,6 @@ class Produit extends Model
         return [
             'prix_achat' => 'decimal:2',
             'prix_vente' => 'decimal:2',
-            'taux_tva' => 'decimal:2',
         ];
     }
 

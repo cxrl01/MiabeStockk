@@ -13,6 +13,7 @@ import ProduitsListe from '../pages/stock/ProduitsListe';
 import ProduitForm from '../pages/stock/ProduitForm';
 import ClientsListe from '../pages/clients/ClientsListe';
 import ClientForm from '../pages/clients/ClientForm';
+import ClientDetail from '../pages/clients/ClientDetail';
 import PageAVenir from '../components/layout/PageAVenir';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -29,15 +30,37 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
 
       <Route path="/ventes" element={<ProtectedRoute><VentesListe /></ProtectedRoute>} />
-      <Route path="/ventes/nouvelle" element={<ProtectedRoute><NouvelleVente /></ProtectedRoute>} />
+      <Route
+        path="/ventes/nouvelle"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant', 'commercial']}>
+            <NouvelleVente />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/ventes/:id" element={<ProtectedRoute><VenteDetail /></ProtectedRoute>} />
 
       <Route path="/stock" element={<ProtectedRoute><ProduitsListe /></ProtectedRoute>} />
-      <Route path="/stock/nouveau" element={<ProtectedRoute><ProduitForm /></ProtectedRoute>} />
-      <Route path="/stock/:id/modifier" element={<ProtectedRoute><ProduitForm /></ProtectedRoute>} />
+      <Route
+        path="/stock/nouveau"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant', 'gestionnaire']}>
+            <ProduitForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stock/:id/modifier"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant', 'gestionnaire']}>
+            <ProduitForm />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="/clients" element={<ProtectedRoute><ClientsListe /></ProtectedRoute>} />
       <Route path="/clients/nouveau" element={<ProtectedRoute><ClientForm /></ProtectedRoute>} />
+      <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
       <Route path="/clients/:id/modifier" element={<ProtectedRoute><ClientForm /></ProtectedRoute>} />
 
       <Route path="/fournisseurs" element={<ProtectedRoute><PageAVenir title="Fournisseurs" /></ProtectedRoute>} />

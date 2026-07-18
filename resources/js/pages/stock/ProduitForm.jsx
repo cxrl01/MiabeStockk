@@ -11,7 +11,6 @@ const CHAMPS_INITIAUX = {
   reference: '',
   prix_achat: '',
   prix_vente: '',
-  taux_tva: '18',
   quantite_stock: '0',
   seuil_alerte: '5',
 };
@@ -38,7 +37,6 @@ export default function ProduitForm() {
           reference: data.reference ?? '',
           prix_achat: data.prix_achat,
           prix_vente: data.prix_vente,
-          taux_tva: data.taux_tva,
           quantite_stock: data.quantite_stock,
           seuil_alerte: data.seuil_alerte,
         });
@@ -143,25 +141,16 @@ export default function ProduitForm() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <TextField
-            id="taux_tva"
-            type="number"
-            step="0.01"
-            label="Taux TVA (%)"
-            value={form.taux_tva}
-            onChange={majChamp('taux_tva')}
-            error={erreurs.taux_tva}
-          />
-          <TextField
-            id="seuil_alerte"
-            type="number"
-            label="Seuil d'alerte"
-            value={form.seuil_alerte}
-            onChange={majChamp('seuil_alerte')}
-            error={erreurs.seuil_alerte}
-          />
-        </div>
+        {/* Pas de champ TVA ici : la TVA est configurable au niveau de la boutique
+            (Administration > Informations de la boutique), pas par produit. */}
+        <TextField
+          id="seuil_alerte"
+          type="number"
+          label="Seuil d'alerte"
+          value={form.seuil_alerte}
+          onChange={majChamp('seuil_alerte')}
+          error={erreurs.seuil_alerte}
+        />
 
         {!modeEdition && (
           <TextField

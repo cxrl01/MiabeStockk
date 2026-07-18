@@ -71,7 +71,7 @@ class ProduitController extends Controller
         $this->authorize('create', Produit::class);
 
         $user = Auth::user();
-        $boutiqueId = $user->boutique_id ?? $request->integer('boutique_id');
+        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
 
         $produit = Produit::create([
             ...$request->validated(),

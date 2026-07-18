@@ -2,13 +2,20 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import Badge from '../../components/ui/Badge';
+import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import { formatMontant, formatDate } from '../../lib/format';
 
 export default function VentesListe() {
+  const { user } = useAuth();
   const [ventes, setVentes] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
+  const [factureEnCours, setFactureEnCours] = useState(null); // id de la vente en cours d'impression
+
+  // Tableau 6 du mémoire : "Créer vente"/"Encaisser"/"Générer PDF" = Gérant + Commercial
+  // uniquement. Le Gestionnaire a "Consulter l'historique des ventes" (lecture seule).
+  const peutVendre = ['gerant', 'commercial'].includes(user?.role?.nom);
 
   useEffect(() => {
     api
@@ -33,6 +40,28 @@ export default function VentesListe() {
     (v) => v.statut === 'validee' && Number(v.montant_paye) < Number(v.montant_ttc)
   ).length;
 
+  /**
+   * Même mécanisme que VenteDetail.jsx : récupère le PDF via l'instance axios déjà
+   * authentifiée (pas de navigation <a href> directe), puis l'ouvre dans un nouvel
+   * onglet via un blob.
+   */
+  const imprimerFacture = async (venteId) => {
+    setFactureEnCours(venteId);
+    try {
+      const { data } = await api.get(`/ventes/${venteId}/facture`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
+    } catch (error) {
+      setErreur(
+        error?.response?.status === 401
+          ? 'Session expirée, reconnectez-vous.'
+          : 'Impossible de générer la facture.'
+      );
+    } finally {
+      setFactureEnCours(null);
+    }
+  };
+
   return (
     <AppShell title="Ventes">
       {erreur && (
@@ -51,13 +80,15 @@ export default function VentesListe() {
           className="flex-1 rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm
             placeholder:text-ink900/35 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
         />
-        <Link
-          to="/ventes/nouvelle"
-          className="inline-flex items-center justify-center rounded-lg bg-ochre-500 hover:bg-ochre-600
-            text-white text-sm font-medium px-4 py-2.5 transition-colors whitespace-nowrap"
-        >
-          + Nouvelle vente
-        </Link>
+        {peutVendre && (
+          <Link
+            to="/ventes/nouvelle"
+            className="inline-flex items-center justify-center rounded-lg bg-ochre-500 hover:bg-ochre-600
+              text-white text-sm font-medium px-4 py-2.5 transition-colors whitespace-nowrap"
+          >
+            + Nouvelle vente
+          </Link>
+        )}
       </div>
 
       {/* Stats */}
@@ -111,10 +142,20 @@ export default function VentesListe() {
                     <Badge statut={vente.statut_paiement} />
                   )}
                 </td>
-                <td className="px-5 py-3.5 text-right">
+                <td className="px-5 py-3.5 text-right space-x-3 whitespace-nowrap">
                   <Link to={`/ventes/${vente.id}`} className="text-indigo-700 hover:underline font-medium">
                     Voir
                   </Link>
+                  {peutVendre && (
+                    <button
+                      type="button"
+                      onClick={() => imprimerFacture(vente.id)}
+                      disabled={factureEnCours === vente.id}
+                      className="text-indigo-700 hover:underline font-medium disabled:opacity-50"
+                    >
+                      {factureEnCours === vente.id ? 'Génération…' : 'Imprimer'}
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

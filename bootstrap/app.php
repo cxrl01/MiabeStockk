@@ -14,6 +14,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+
+        // Application 100% API/SPA : aucune route "login" Blade n'existe. Sans ceci,
+        // Authenticate::redirectTo() appelle route('login') des qu'une requete non
+        // authentifiee n'envoie pas "Accept: application/json" (cas d'une navigation
+        // <a href> classique, ex: le lien "Imprimer la facture"), ce qui plante avec
+        // RouteNotFoundException AVANT meme que shouldRenderJsonWhen ci-dessous ait
+        // une chance de s'appliquer. On force donc l'absence de redirection : jamais
+        // de route('login'), toujours un 401 JSON.
+        $middleware->redirectGuestsTo(fn () => null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

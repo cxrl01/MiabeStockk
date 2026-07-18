@@ -16,7 +16,9 @@ return new class extends Migration
             $table->string('reference')->nullable();
             $table->decimal('prix_achat', 12, 2)->default(0);
             $table->decimal('prix_vente', 12, 2);
-            $table->decimal('taux_tva', 5, 2)->default(0);
+            // Pas de taux_tva ici : le diagramme de classe (Figure 23) ne donne pas de TVA a
+            // Produit, seulement a Boutique. La TVA appliquee a une vente vient de
+            // boutiques.tva, pas d'un taux par produit.
             $table->integer('quantite_stock')->default(0);
             $table->integer('seuil_alerte')->default(0);
             $table->timestamps();
@@ -24,8 +26,8 @@ return new class extends Migration
             $table->index(['boutique_id', 'nom']);
         });
 
-        // Contrainte au niveau base pour empêcher un stock négatif, en plus de la
-        // vérification applicative faite dans Produit::reduireStock().
+        // Contrainte au niveau base pour empecher un stock negatif, en plus de la
+        // verification applicative faite dans Produit::reduireStock().
         \DB::statement('ALTER TABLE produits ADD CONSTRAINT chk_quantite_stock_positive CHECK (quantite_stock >= 0)');
     }
 

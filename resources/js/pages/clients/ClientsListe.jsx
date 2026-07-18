@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
+import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
+import { lienRelanceWhatsapp } from '../../lib/whatsapp';
 
 export default function ClientsListe() {
+  const { user } = useAuth();
   const [clients, setClients] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
+
+  const boutiqueNom = user?.boutique?.nom || user?.boutiques_gerees?.[0]?.nom || 'notre boutique';
 
   const charger = () => {
     api.get('/clients', { params: { per_page: 100 } })
@@ -76,6 +81,8 @@ export default function ClientsListe() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {clientsFiltres.map((client) => {
           const aDette = Number(client.dette) > 0;
+          const lienWhatsapp = aDette ? lienRelanceWhatsapp(client, boutiqueNom) : null;
+
           return (
             <div
               key={client.id}
@@ -89,7 +96,12 @@ export default function ClientsListe() {
                     {client.nom.charAt(0).toUpperCase()}
                   </span>
                   <div>
-                    <p className="font-medium text-ink900">{client.nom}</p>
+                    <Link
+                      to={`/clients/${client.id}`}
+                      className="font-medium text-ink900 hover:text-indigo-700 hover:underline"
+                    >
+                      {client.nom}
+                    </Link>
                     {client.telephone && <p className="text-xs text-ink900/40">{client.telephone}</p>}
                   </div>
                 </div>
@@ -102,7 +114,7 @@ export default function ClientsListe() {
 
               {client.adresse && <p className="text-sm text-ink900/50 mb-3">{client.adresse}</p>}
 
-              <div className="flex items-center justify-between pt-3 border-t border-ink900/10">
+              <div className="flex items-center justify-between pt-3 border-t border-ink900/10 mb-3">
                 <div>
                   <p className="text-xs text-ink900/40">Dette</p>
                   <p className={`font-mono font-medium ${aDette ? 'text-danger' : 'text-ink900/60'}`}>
@@ -118,6 +130,22 @@ export default function ClientsListe() {
                   </button>
                 </div>
               </div>
+
+              {aDette && (
+                lienWhatsapp ? (
+                  <a
+                    href={lienWhatsapp}
+                    target="_blank"
+                    rel="noopener"
+                    className="flex items-center justify-center gap-2 rounded-lg bg-success/10 hover:bg-success/15
+                      text-success text-sm font-medium py-2 transition-colors"
+                  >
+                    Relancer sur WhatsApp
+                  </a>
+                ) : (
+                  <p className="text-xs text-ink900/35 text-center py-1">Aucun numéro pour relancer</p>
+                )
+              )}
             </div>
           );
         })}

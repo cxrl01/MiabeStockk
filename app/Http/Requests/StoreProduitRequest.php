@@ -20,7 +20,6 @@ class StoreProduitRequest extends FormRequest
             'reference' => ['nullable', 'string', 'max:255'],
             'prix_achat' => ['required', 'numeric', 'min:0'],
             'prix_vente' => ['required', 'numeric', 'min:0', 'gte:prix_achat'],
-            'taux_tva' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'quantite_stock' => ['nullable', 'integer', 'min:0'],
             'seuil_alerte' => ['nullable', 'integer', 'min:0'],
         ];

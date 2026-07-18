@@ -34,6 +34,7 @@ Route::prefix('v1')->group(function () {
             ->parameters(['ventes' => 'vente'])
             ->only(['index', 'store', 'show']);
         Route::post('/ventes/{vente}/annuler', [VenteController::class, 'annuler']);
+        Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture']);
 
         // Paiement partiel sur une commande (vente ou livraison).
         Route::post('/commandes/{commande}/paiements', [PaiementController::class, 'store']);
@@ -51,5 +52,6 @@ Route::prefix('v1')->group(function () {
         Route::post('/produits/{produit}/ajuster-stock', [MouvementStockController::class, 'store']);
 
         Route::apiResource('clients', \App\Http\Controllers\Api\V1\ClientController::class);
+        Route::get('paiements/{paiement}/recu', [PaiementController::class, 'recu']);
     });
 });

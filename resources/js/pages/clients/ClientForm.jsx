@@ -20,7 +20,11 @@ export default function ClientForm() {
   useEffect(() => {
     if (modeEdition) {
       api.get(`/clients/${id}`).then(({ data }) => {
-        setForm({ nom: data.nom, telephone: data.telephone ?? '', adresse: data.adresse ?? '' });
+        setForm({
+          nom: data.client.nom,
+          telephone: data.client.telephone ?? '',
+          adresse: data.client.adresse ?? '',
+        });
       });
     }
   }, [id]);

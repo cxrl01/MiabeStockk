@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
+import { useAuth } from '../../hooks/useAuth';
 import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
 
 export default function ProduitsListe() {
+  const { user } = useAuth();
   const [produits, setProduits] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
+
+  // Tableau 6 du mémoire : "Ajouter/Modifier/Supprimer produit" = Gérant + Gestionnaire
+  // uniquement. Le Commercial a "Consulter stock" (lecture seule).
+  const peutGererStock = ['gerant', 'gestionnaire'].includes(user?.role?.nom);
 
   const charger = () => {
     api.get('/produits', { params: { per_page: 100 } })
@@ -50,13 +56,15 @@ export default function ProduitsListe() {
           className="flex-1 rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm
             placeholder:text-ink900/35 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
         />
-        <Link
-          to="/stock/nouveau"
-          className="inline-flex items-center justify-center rounded-lg bg-ochre-500 hover:bg-ochre-600
-            text-white text-sm font-medium px-4 py-2.5 transition-colors whitespace-nowrap"
-        >
-          + Ajouter produit
-        </Link>
+        {peutGererStock && (
+          <Link
+            to="/stock/nouveau"
+            className="inline-flex items-center justify-center rounded-lg bg-ochre-500 hover:bg-ochre-600
+              text-white text-sm font-medium px-4 py-2.5 transition-colors whitespace-nowrap"
+          >
+            + Ajouter produit
+          </Link>
+        )}
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
@@ -84,7 +92,7 @@ export default function ProduitsListe() {
               <th className="px-5 py-3 font-medium text-right">Seuil</th>
               <th className="px-5 py-3 font-medium text-right">Prix vente</th>
               <th className="px-5 py-3 font-medium">Statut</th>
-              <th className="px-5 py-3 font-medium text-right">Actions</th>
+              {peutGererStock && <th className="px-5 py-3 font-medium text-right">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -113,21 +121,23 @@ export default function ProduitsListe() {
                       </span>
                     )}
                   </td>
-                  <td className="px-5 py-3.5 text-right space-x-3">
-                    <Link to={`/stock/${p.id}/modifier`} className="text-indigo-700 hover:underline font-medium">
-                      Modifier
-                    </Link>
-                    <button onClick={() => supprimer(p)} className="text-danger hover:underline font-medium">
-                      Supprimer
-                    </button>
-                  </td>
+                  {peutGererStock && (
+                    <td className="px-5 py-3.5 text-right space-x-3">
+                      <Link to={`/stock/${p.id}/modifier`} className="text-indigo-700 hover:underline font-medium">
+                        Modifier
+                      </Link>
+                      <button onClick={() => supprimer(p)} className="text-danger hover:underline font-medium">
+                        Supprimer
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}
 
             {produits && produitsFiltres.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-5 py-10 text-center text-ink900/40">Aucun produit.</td>
+                <td colSpan={peutGererStock ? 7 : 6} className="px-5 py-10 text-center text-ink900/40">Aucun produit.</td>
               </tr>
             )}
           </tbody>
