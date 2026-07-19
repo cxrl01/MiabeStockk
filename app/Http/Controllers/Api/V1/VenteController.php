@@ -117,6 +117,16 @@ class VenteController extends Controller
                 $commande->recalculerMontants();
                 $commande->valider(); // impacte le stock (sortie) et passe statut=validee
 
+                // "Suivre dette" (Tableau 6) : la dette du client augmente du montant
+                // TOTAL de la vente des sa validation. Le paiement initial eventuel
+                // (juste apres) la decremente via Paiement::booted() — donc l'ordre
+                // compte : incrementer AVANT de creer le paiement, jamais apres, sinon
+                // une vente payee integralement a la creation ferait passer la dette en
+                // negatif (le paiement decremente un montant jamais incremente).
+                if ($commande->client) {
+                    $commande->client->increment('dette', $commande->montant_ttc);
+                }
+
                 // Paiement initial encaissé au moment de la vente (mémoire, cas
                 // d'utilisation "Effectuer une vente" : choix du mode de paiement et
                 // validation en une seule étape). Le modele Paiement se charge lui-même,
@@ -130,15 +140,6 @@ class VenteController extends Controller
                         'mode' => $request->input('mode_paiement', 'especes'),
                         'user_id' => $user->id,
                     ]);
-                }
-
-                // "Suivre dette" (Tableau 6) : si la vente laisse un solde impaye
-                // apres le paiement initial eventuel, on l'ajoute a la dette du
-                // client. Chaque paiement ulterieur la decremente deja via
-                // Paiement::booted().
-                $commande->refresh();
-                if ($commande->client && $commande->solde() > 0) {
-                    $commande->client->increment('dette', $commande->solde());
                 }
 
                 return $commande;

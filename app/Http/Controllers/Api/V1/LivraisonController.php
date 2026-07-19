@@ -104,6 +104,14 @@ class LivraisonController extends Controller
                 $commande->recalculerMontants();
                 $commande->valider(); // augmente le stock (entree) pour chaque ligne
 
+                // "Gerer dette fournisseur" (Tableau 6) : la dette du fournisseur
+                // augmente du montant TOTAL de la livraison des sa validation, AVANT
+                // le paiement initial eventuel (qui la decremente via Paiement::booted()).
+                // Meme ordre que VenteController::store(), pour la meme raison : sinon
+                // une livraison payee integralement a la reception ferait passer la
+                // dette en negatif.
+                $fournisseur->increment('dette', $commande->montant_ttc);
+
                 $montantPaye = (float) $request->input('montant_paye', 0);
                 if ($montantPaye > 0) {
                     $commande->paiements()->create([
@@ -111,14 +119,6 @@ class LivraisonController extends Controller
                         'mode' => $request->input('mode_paiement', 'especes'),
                         'user_id' => $user->id,
                     ]);
-                }
-
-                // "Gerer dette fournisseur" (Tableau 6) : le solde impaye de cette
-                // livraison s'ajoute a la dette du fournisseur. Chaque paiement
-                // ulterieur la decremente deja via Paiement::booted().
-                $commande->refresh();
-                if ($commande->solde() > 0) {
-                    $fournisseur->increment('dette', $commande->solde());
                 }
 
                 return $commande;

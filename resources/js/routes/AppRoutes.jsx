@@ -14,6 +14,9 @@ import ProduitForm from '../pages/stock/ProduitForm';
 import ClientsListe from '../pages/clients/ClientsListe';
 import ClientForm from '../pages/clients/ClientForm';
 import ClientDetail from '../pages/clients/ClientDetail';
+import FournisseursListe from '../pages/fournisseurs/FournisseursListe';
+import FournisseurForm from '../pages/fournisseurs/FournisseurForm';
+import NouvelleLivraison from '../pages/fournisseurs/NouvelleLivraison';
 import PageAVenir from '../components/layout/PageAVenir';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -63,7 +66,32 @@ export default function AppRoutes() {
       <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
       <Route path="/clients/:id/modifier" element={<ProtectedRoute><ClientForm /></ProtectedRoute>} />
 
-      <Route path="/fournisseurs" element={<ProtectedRoute><PageAVenir title="Fournisseurs" /></ProtectedRoute>} />
+      <Route path="/fournisseurs" element={<ProtectedRoute><FournisseursListe /></ProtectedRoute>} />
+      <Route
+        path="/fournisseurs/nouveau"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant', 'gestionnaire']}>
+            <FournisseurForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/fournisseurs/:id/modifier"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant', 'gestionnaire']}>
+            <FournisseurForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/fournisseurs/livraison-nouvelle"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant', 'gestionnaire']}>
+            <NouvelleLivraison />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/equipe" element={<ProtectedRoute><PageAVenir title="Équipe" /></ProtectedRoute>} />
       <Route path="/depenses" element={<ProtectedRoute><PageAVenir title="Dépenses" /></ProtectedRoute>} />
       <Route path="/rapports" element={<ProtectedRoute><PageAVenir title="Rapports" /></ProtectedRoute>} />

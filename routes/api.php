@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategorieController;
+use App\Http\Controllers\Api\V1\FournisseurController;
+use App\Http\Controllers\Api\V1\LivraisonController;
 use App\Http\Controllers\Api\V1\MouvementStockController;
 use App\Http\Controllers\Api\V1\PaiementController;
 use App\Http\Controllers\Api\V1\ProduitController;
@@ -38,6 +40,7 @@ Route::prefix('v1')->group(function () {
 
         // Paiement partiel sur une commande (vente ou livraison).
         Route::post('/commandes/{commande}/paiements', [PaiementController::class, 'store']);
+        Route::get('/paiements/{paiement}/recu', [PaiementController::class, 'recu']);
 
         // Catégories : CRUD complet.
         Route::apiResource('categories', CategorieController::class)
@@ -52,6 +55,12 @@ Route::prefix('v1')->group(function () {
         Route::post('/produits/{produit}/ajuster-stock', [MouvementStockController::class, 'store']);
 
         Route::apiResource('clients', \App\Http\Controllers\Api\V1\ClientController::class);
-        Route::get('paiements/{paiement}/recu', [PaiementController::class, 'recu']);
+
+        // Fournisseurs : CRUD complet (Tableau 6 : Gérant + Gestionnaire, via
+        // FournisseurPolicy). Livraisons restreintes à index/store/show — comme
+        // les ventes, une livraison validée ne se modifie pas.
+        Route::apiResource('fournisseurs', FournisseurController::class);
+        Route::apiResource('livraisons', LivraisonController::class)
+            ->only(['index', 'store', 'show']);
     });
 });
