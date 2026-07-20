@@ -22,6 +22,7 @@ import EmployeForm from '../pages/equipe/EmployeForm';
 import DepensesListe from '../pages/depenses/DepensesListe';
 import DepenseForm from '../pages/depenses/DepenseForm';
 import RapportsStats from '../pages/rapports/RapportsStats';
+import Administration from '../pages/administration/Administration';
 import PageAVenir from '../components/layout/PageAVenir';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -152,6 +153,15 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute rolesAutorises={['gerant']}>
             <RapportsStats />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/administration"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant']}>
+            <Administration />
           </ProtectedRoute>
         }
       />

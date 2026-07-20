@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\VenteController;
 use App\Http\Controllers\Api\V1\EquipeController;
 use App\Http\Controllers\Api\V1\DepenseController;
 use App\Http\Controllers\Api\V1\RapportController;
+use App\Http\Controllers\Api\V1\BoutiqueController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -49,8 +50,15 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('categories', CategorieController::class)
             ->parameters(['categories' => 'categorie']);
 
-        // Produits : CRUD complet + route dédiée pour les alertes de seuil.
+        // Produits : route dédiée pour les alertes de seuil.
         Route::get('/produits/alertes', [ProduitController::class, 'enAlerte']);
+
+        //import & export produit depuis excel
+        Route::get('/produits/export', [ProduitController::class, 'export']);
+        Route::get('/produits/modele-import', [ProduitController::class, 'modeleImport']);
+        Route::post('/produits/importer', [ProduitController::class, 'importer']);
+        
+        //Produits : CRUD complet + 
         Route::apiResource('produits', ProduitController::class);
 
         // Mouvements de stock : historique par produit + ajustement manuel.
@@ -75,5 +83,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/rapports/statistiques', [RapportController::class, 'statistiques']);
         Route::get('/rapports/resultat-net', [RapportController::class, 'resultatNet']);
         Route::get('/rapports/export-pdf', [RapportController::class, 'exportPdf']);
+
+        Route::apiResource('boutiques', BoutiqueController::class)->only(['index', 'store', 'show', 'update']);
     });
 });

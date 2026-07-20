@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exports\ModeleImportProduitsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProduitRequest;
 use App\Http\Requests\UpdateProduitRequest;
+use App\Imports\ProduitsImport;
 use App\Models\Produit;
 use App\Traits\JournaliseActivite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProduitController extends Controller
 {
@@ -117,4 +120,57 @@ class ProduitController extends Controller
 
         return response()->json(null, 204);
     }
+
+    /**
+     * Import en masse du catalogue depuis un fichier Excel/CSV. Même règle
+     * d'autorisation que la création manuelle (ProduitPolicy::create).
+     */
+    public function importer(Request $request): JsonResponse
+    {
+        $this->authorize('create', Produit::class);
+
+        $request->validate([
+            'fichier' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
+        ]);
+
+        $user = Auth::user();
+        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
+
+        $import = new ProduitsImport($boutiqueId);
+        Excel::import($import, $request->file('fichier'));
+
+        $this->journaliser('produits.importes', null, [
+            'nombre_importes' => $import->nombreImportes,
+            'nombre_erreurs' => count($import->erreurs),
+        ]);
+
+        return response()->json([
+            'nombre_importes' => $import->nombreImportes,
+            'erreurs' => $import->erreurs,
+        ]);
+    }
+
+    /**
+     * Télécharge un fichier Excel vide avec les bons en-têtes de colonnes,
+     * pour que le Gérant/Gestionnaire sache exactement quoi remplir.
+     */
+    public function modeleImport()
+    {
+        $user = Auth::user();
+        // On récupère l'ID de la boutique pour personnaliser le modèle si nécessaire
+        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
+        
+        return Excel::download(new ModeleImportProduitsExport($boutiqueId), 'modele-import-produits.xlsx');
+    }
+
+    // Pour exporter vos données réelles
+    public function export()
+    {
+        $this->authorize('viewAny', Produit::class);
+        $user = Auth::user();
+        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
+
+    // On utilise la classe ModeleImportProduitsExport que vous aviez configurée pour être dynamique
+        return Excel::download(new \App\Exports\ModeleImportProduitsExport($boutiqueId), 'stock_produits.xlsx');
+    }  
 }
