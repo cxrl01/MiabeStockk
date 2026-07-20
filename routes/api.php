@@ -9,6 +9,9 @@ use App\Http\Controllers\Api\V1\PaiementController;
 use App\Http\Controllers\Api\V1\ProduitController;
 use App\Http\Controllers\Api\V1\ProfilController;
 use App\Http\Controllers\Api\V1\VenteController;
+use App\Http\Controllers\Api\V1\EquipeController;
+use App\Http\Controllers\Api\V1\DepenseController;
+use App\Http\Controllers\Api\V1\RapportController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -62,5 +65,15 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('fournisseurs', FournisseurController::class);
         Route::apiResource('livraisons', LivraisonController::class)
             ->only(['index', 'store', 'show']);
+        
+        Route::apiResource('equipe', EquipeController::class)
+            ->parameters(['equipe' => 'employe']);
+         
+        Route::get('/depenses/tresorerie', [DepenseController::class, 'tresorerie']);
+            Route::apiResource('depenses', DepenseController::class);
+
+        Route::get('/rapports/statistiques', [RapportController::class, 'statistiques']);
+        Route::get('/rapports/resultat-net', [RapportController::class, 'resultatNet']);
+        Route::get('/rapports/export-pdf', [RapportController::class, 'exportPdf']);
     });
 });

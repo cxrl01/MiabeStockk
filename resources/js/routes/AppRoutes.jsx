@@ -17,6 +17,11 @@ import ClientDetail from '../pages/clients/ClientDetail';
 import FournisseursListe from '../pages/fournisseurs/FournisseursListe';
 import FournisseurForm from '../pages/fournisseurs/FournisseurForm';
 import NouvelleLivraison from '../pages/fournisseurs/NouvelleLivraison';
+import EquipeListe from '../pages/equipe/EquipeListe';
+import EmployeForm from '../pages/equipe/EmployeForm';
+import DepensesListe from '../pages/depenses/DepensesListe';
+import DepenseForm from '../pages/depenses/DepenseForm';
+import RapportsStats from '../pages/rapports/RapportsStats';
 import PageAVenir from '../components/layout/PageAVenir';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -92,9 +97,64 @@ export default function AppRoutes() {
         }
       />
 
-      <Route path="/equipe" element={<ProtectedRoute><PageAVenir title="Équipe" /></ProtectedRoute>} />
-      <Route path="/depenses" element={<ProtectedRoute><PageAVenir title="Dépenses" /></ProtectedRoute>} />
-      <Route path="/rapports" element={<ProtectedRoute><PageAVenir title="Rapports" /></ProtectedRoute>} />
+      <Route
+        path="/equipe"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant']}>
+            <EquipeListe />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/equipe/nouveau"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant']}>
+            <EmployeForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/equipe/:id/modifier"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant']}>
+            <EmployeForm />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/depenses"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant', 'gestionnaire']}>
+            <DepensesListe />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/depenses/nouvelle"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant', 'gestionnaire']}>
+            <DepenseForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/depenses/:id/modifier"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant', 'gestionnaire']}>
+            <DepenseForm />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/rapports"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant']}>
+            <RapportsStats />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/admin"

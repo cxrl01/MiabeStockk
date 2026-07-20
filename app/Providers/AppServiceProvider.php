@@ -6,12 +6,14 @@ use App\Models\Categorie;
 use App\Models\Client;
 use App\Models\Commande;
 use App\Models\Produit;
+use App\Models\User;
 use App\Policies\CategoriePolicy;
 use App\Policies\ClientPolicy;
 use App\Policies\ProduitPolicy;
 use App\Policies\VentePolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
+use App\Policies\EquipePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Categorie::class, CategoriePolicy::class);
         Gate::policy(Produit::class, ProduitPolicy::class);
         Gate::policy(Client::class, ClientPolicy::class);
+        Gate::policy(User::class, EquipePolicy::class);
 
         // Le lien de réinitialisation doit pointer vers la SPA React
         // (pas de route Blade "password.reset" dans cette architecture).
@@ -52,5 +55,7 @@ class AppServiceProvider extends ServiceProvider
                 ->line('Ce lien expirera dans 60 minutes.')
                 ->line('Si vous n\'êtes pas à l\'origine de cette demande, aucune action n\'est requise.');
         });
+
+
     }
 }

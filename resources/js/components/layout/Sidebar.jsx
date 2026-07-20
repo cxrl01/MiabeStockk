@@ -34,7 +34,9 @@ export default function Sidebar({ collapsed, stockAlertesCount, ventesAlertesCou
   ];
 
   const NAV_ANALYSE = [
-    { to: '/rapports', label: 'Rapports & Stats', Icon: IconChart, visible: true },
+    // Tableau 6 du memoire : "Generer rapports et statistiques" n'apparait que
+    // dans la liste du Gerant — ni Gestionnaire ni Commercial n'y ont acces.
+    { to: '/rapports', label: 'Rapports & Stats', Icon: IconChart, visible: estGerant },
     { to: '/depenses', label: 'Dépenses & Trésorerie', Icon: IconWallet, visible: estGerant || estGestionnaire },
   ];
 
