@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\CheckBoutiqueActive;
+use App\Http\Middleware\CheckRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +25,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // une chance de s'appliquer. On force donc l'absence de redirection : jamais
         // de route('login'), toujours un 401 JSON.
         $middleware->redirectGuestsTo(fn () => null);
+
+        // Alias 'role:xxx' et 'boutique.active' utilisables dans les groupes
+        // de routes.
+        $middleware->alias([
+            'role' => CheckRole::class,
+            'boutique.active' => CheckBoutiqueActive::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

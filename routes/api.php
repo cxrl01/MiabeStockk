@@ -13,6 +13,9 @@ use App\Http\Controllers\Api\V1\EquipeController;
 use App\Http\Controllers\Api\V1\DepenseController;
 use App\Http\Controllers\Api\V1\RapportController;
 use App\Http\Controllers\Api\V1\BoutiqueController;
+use App\Http\Controllers\Api\V1\SuperAdminController;
+use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\ClientController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -23,8 +26,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
-    // --- Routes protégées (Sanctum) ---
-    Route::middleware('auth:sanctum')->group(function () {
+    // --- Routes protégées (Sanctum + boutique active a chaque requete) ---
+    Route::middleware(['auth:sanctum', 'boutique.active'])->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
 
@@ -32,7 +35,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/profil', [ProfilController::class, 'update']);
         Route::put('/profil/mot-de-passe', [ProfilController::class, 'updatePassword']);
 
-        Route::get('/rapports/dashboard', [\App\Http\Controllers\Api\V1\DashboardController::class, 'index']);
+        Route::get('/rapports/dashboard', [DashboardController::class, 'index']);
 
         // Ventes : apiResource restreint à index/store/show (pas d'update/destroy —
         // une vente validée ne se modifie pas, elle s'annule).
@@ -50,22 +53,21 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('categories', CategorieController::class)
             ->parameters(['categories' => 'categorie']);
 
-        // Produits : route dédiée pour les alertes de seuil.
+        // Produits : routes dédiées déclarées AVANT le apiResource pour éviter
+        // que {produit} ne capture "alertes", "export", etc.
         Route::get('/produits/alertes', [ProduitController::class, 'enAlerte']);
-
-        //import & export produit depuis excel
         Route::get('/produits/export', [ProduitController::class, 'export']);
         Route::get('/produits/modele-import', [ProduitController::class, 'modeleImport']);
         Route::post('/produits/importer', [ProduitController::class, 'importer']);
-        
-        //Produits : CRUD complet + 
+
+        // Produits : CRUD complet.
         Route::apiResource('produits', ProduitController::class);
 
         // Mouvements de stock : historique par produit + ajustement manuel.
         Route::get('/produits/{produit}/mouvements', [MouvementStockController::class, 'index']);
         Route::post('/produits/{produit}/ajuster-stock', [MouvementStockController::class, 'store']);
 
-        Route::apiResource('clients', \App\Http\Controllers\Api\V1\ClientController::class);
+        Route::apiResource('clients', ClientController::class);
 
         // Fournisseurs : CRUD complet (Tableau 6 : Gérant + Gestionnaire, via
         // FournisseurPolicy). Livraisons restreintes à index/store/show — comme
@@ -73,17 +75,35 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('fournisseurs', FournisseurController::class);
         Route::apiResource('livraisons', LivraisonController::class)
             ->only(['index', 'store', 'show']);
-        
+
         Route::apiResource('equipe', EquipeController::class)
             ->parameters(['equipe' => 'employe']);
-         
+
         Route::get('/depenses/tresorerie', [DepenseController::class, 'tresorerie']);
-            Route::apiResource('depenses', DepenseController::class);
+        Route::apiResource('depenses', DepenseController::class);
 
         Route::get('/rapports/statistiques', [RapportController::class, 'statistiques']);
         Route::get('/rapports/resultat-net', [RapportController::class, 'resultatNet']);
         Route::get('/rapports/export-pdf', [RapportController::class, 'exportPdf']);
 
-        Route::apiResource('boutiques', BoutiqueController::class)->only(['index', 'store', 'show', 'update']);
+        // Boutiques : CRUD standard, accessible a tous les roles authentifies.
+        // BoutiqueController::index() filtre deja en interne selon le role
+        // (super_admin voit tout, gerant voit ses boutiques, staff voit la
+        // sienne) — pas besoin de role:super_admin ici, sinon /administration
+        // (espace Gerant) casse.
+        Route::apiResource('boutiques', BoutiqueController::class)
+            ->only(['index', 'store', 'show', 'update']);
+
+        // --- Espace Super Admin ---
+        // Uniquement les actions reellement reservees au Super Admin :
+        // suspendre/reactiver/supprimer une boutique, statistiques globales,
+        // journal d'activite. Le listage (index) reste sur /boutiques ci-dessus.
+        Route::middleware('role:super_admin')->prefix('admin')->group(function () {
+            Route::post('/boutiques/{boutique}/suspendre', [BoutiqueController::class, 'suspendre']);
+            Route::post('/boutiques/{boutique}/reactiver', [BoutiqueController::class, 'reactiver']);
+            Route::delete('/boutiques/{boutique}', [BoutiqueController::class, 'destroy']);
+            Route::get('/statistiques', [SuperAdminController::class, 'statistiques']);
+            Route::get('/journal', [SuperAdminController::class, 'journal']);
+        });
     });
 });

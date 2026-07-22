@@ -137,3 +137,24 @@ export const IconDollar = (p) => (
     <path d="M10 5.5v9M12.6 7.7c0-1-1.1-1.7-2.6-1.7-1.7 0-2.7.8-2.7 1.9 0 2.6 5.3 1.2 5.3 3.8 0 1.1-1.1 1.9-2.7 1.9-1.5 0-2.6-.7-2.6-1.7" />
   </svg>
 );
+
+export const IconEye = (p) => (
+  <svg viewBox="0 0 20 20" width="18" height="18" {...base} {...p}>
+    <path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6-8.5-6-8.5-6Z" />
+    <circle cx="10" cy="10" r="2.5" />
+  </svg>
+);
+
+export const IconBan = (p) => (
+  <svg viewBox="0 0 20 20" width="18" height="18" {...base} {...p}>
+    <circle cx="10" cy="10" r="7.5" />
+    <path d="M4.8 4.8l10.4 10.4" />
+  </svg>
+);
+
+export const IconTrash = (p) => (
+  <svg viewBox="0 0 20 20" width="18" height="18" {...base} {...p}>
+    <path d="M3 5.5h14M7.5 5.5V4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.5M8 9v5M12 9v5" />
+    <path d="M4.5 5.5 5.3 16a1.5 1.5 0 0 0 1.5 1.4h6.4a1.5 1.5 0 0 0 1.5-1.4l.8-10.5" />
+  </svg>
+);

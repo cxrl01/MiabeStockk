@@ -3,12 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 import Button from '../components/ui/Button';
 
 /* ------------------------------------------------------------------ */
-/* Données                                                              */
+/* Données — uniquement des fonctionnalités réellement construites     */
 /* ------------------------------------------------------------------ */
 
 const TRUST = [
   {
-    label: 'Données sécurisées',
+    label: 'Données isolées par boutique',
     icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
   },
   {
@@ -23,18 +23,12 @@ const TRUST = [
     ),
   },
   {
-    label: 'Temps réel',
+    label: 'Stock mis à jour en temps réel',
     icon: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />,
   },
   {
-    label: 'Web & mobile',
-    icon: (
-      <>
-        <rect x="2" y="3" width="20" height="14" rx="2" />
-        <line x1="8" y1="21" x2="16" y2="21" />
-        <line x1="12" y1="17" x2="12" y2="21" />
-      </>
-    ),
+    label: 'Rôles & permissions',
+    icon: <path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />,
   },
 ];
 
@@ -42,7 +36,7 @@ const FEATURES = [
   {
     titre: 'Point de vente rapide',
     texte:
-      'Créez une vente en quelques secondes. Calculez le total automatiquement, choisissez le mode de paiement et générez la facture instantanément.',
+      'Ajoutez des produits au panier, calculez le total HT/TVA/TTC automatiquement, encaissez et générez la facture PDF en un clic.',
     icon: (
       <>
         <circle cx="9" cy="21" r="1" />
@@ -52,9 +46,21 @@ const FEATURES = [
     ),
   },
   {
-    titre: 'Gestion des stocks',
+    titre: 'Import Excel du catalogue',
     texte:
-      "Suivez chaque produit en temps réel. Recevez une alerte automatique dès qu'un article approche de son seuil critique, avant la rupture.",
+      "Des centaines de produits à ajouter ? Un seul fichier Excel suffit — plus besoin de les saisir un par un, ligne par ligne.",
+    icon: (
+      <>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <path d="M9 15l2 2 4-4" />
+      </>
+    ),
+  },
+  {
+    titre: 'Stock & alertes de seuil',
+    texte:
+      "Chaque vente et chaque livraison met le stock à jour automatiquement. Une alerte apparaît dès qu'un produit passe sous son seuil.",
     icon: (
       <>
         <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -64,38 +70,32 @@ const FEATURES = [
     ),
   },
   {
-    titre: 'Suivi des dettes',
+    titre: 'Clients & relance WhatsApp',
     texte:
-      "Chaque paiement partiel génère sa propre facture numérotée. Retrouvez l'historique complet de chaque client en cas de litige.",
-    icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
-  },
-  {
-    titre: 'Trésorerie en temps réel',
-    texte:
-      'Entrées, sorties, dépenses courantes : visualisez votre solde exact à tout moment, sans attendre la fin du mois.',
+      "Suivez la dette de chaque client et relancez-le directement sur WhatsApp, message pré-rempli, en un clic.",
     icon: (
       <>
-        <line x1="12" y1="1" x2="12" y2="23" />
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
       </>
     ),
   },
   {
-    titre: 'Rapports & statistiques',
+    titre: 'Fournisseurs & livraisons',
     texte:
-      "Chiffre d'affaires, marges, top ventes : prenez des décisions basées sur vos vraies données, exportables en PDF.",
+      'Enregistrez vos livraisons fournisseurs : le stock augmente automatiquement, et la dette fournisseur se met à jour toute seule.',
     icon: (
       <>
-        <line x1="18" y1="20" x2="18" y2="10" />
-        <line x1="12" y1="20" x2="12" y2="4" />
-        <line x1="6" y1="20" x2="6" y2="14" />
+        <rect x="1" y="3" width="15" height="13" />
+        <polygon points="16 8 20 8 23 11 23 16 16 16" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
       </>
     ),
   },
   {
     titre: 'Équipe & rôles',
     texte:
-      'Le Gérant crée et gère les comptes Gestionnaire et Commercial. Chacun accède uniquement à ce qui le concerne.',
+      'Le Gérant crée les comptes Gestionnaire et Commercial. Chacun accède exactement à ce dont il a besoin, pas plus.',
     icon: (
       <>
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -105,59 +105,70 @@ const FEATURES = [
       </>
     ),
   },
+  {
+    titre: 'Dépenses & trésorerie',
+    texte:
+      'Loyer, salaires, achats de stock — suivez ce qui sort de la caisse au même endroit que ce qui y entre.',
+    icon: (
+      <>
+        <line x1="12" y1="1" x2="12" y2="23" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+      </>
+    ),
+  },
+  {
+    titre: 'Rapports & export PDF',
+    texte:
+      "Chiffre d'affaires, résultat net, top produits : votre activité en un coup d'œil, exportable en PDF pour vos archives.",
+    icon: (
+      <>
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </>
+    ),
+  },
 ];
 
 const STEPS = [
   {
     num: '01',
     titre: 'Créez votre boutique',
-    texte: 'Inscrivez-vous, configurez le nom, la devise et le logo de votre boutique en moins de 2 minutes.',
+    texte: 'Inscrivez-vous en tant que Gérant et configurez votre boutique en quelques minutes.',
   },
   {
     num: '02',
-    titre: 'Ajoutez vos produits',
-    texte: "Importez votre catalogue, définissez les prix d'achat et de vente, et paramétrez les seuils d'alerte.",
+    titre: 'Importez votre catalogue',
+    texte: 'Un fichier Excel avec vos produits, prix et quantités — ou ajoutez-les un par un si vous préférez.',
   },
   {
     num: '03',
     titre: 'Vendez et suivez',
-    texte: 'Enregistrez vos ventes, gérez vos clients et consultez vos rapports depuis n’importe quel appareil.',
+    texte: "Encaissez, suivez vos stocks et vos dettes clients, invitez votre équipe quand vous êtes prêt.",
   },
 ];
 
 const FAQ = [
   {
-    q: 'MiabéStock fonctionne-t-il sans connexion internet stable ?',
-    a: "L'application est conçue pour être légère et rapide, même avec une connexion limitée. Les données sont synchronisées dès que la connexion est rétablie.",
-  },
-  {
     q: 'Qui peut créer des comptes Gestionnaire ou Commercial ?',
     a: 'Seul le Gérant, propriétaire de la boutique, peut créer et gérer les comptes de son équipe. Chaque employé accède uniquement aux modules qui lui sont attribués.',
   },
   {
-    q: 'Comment fonctionne la facturation des dettes ?',
-    a: "Chaque paiement reçu génère automatiquement une facture distincte avec un numéro unique. Vous pouvez retrouver l'historique complet de chaque client en cas de litige.",
+    q: 'Puis-je gérer plusieurs boutiques avec un seul compte ?',
+    a: "Oui. Un Gérant peut posséder plusieurs boutiques et passer de l'une à l'autre depuis son espace.",
+  },
+  {
+    q: 'Comment fonctionne le suivi des dettes clients ?',
+    a: "Chaque vente à crédit met à jour la dette du client. Vous pouvez relancer un client directement sur WhatsApp, avec un message pré-rempli reprenant le montant dû.",
   },
   {
     q: 'Mes données sont-elles isolées des autres boutiques ?',
-    a: 'Oui. Chaque boutique dispose de son espace entièrement isolé. Aucun autre utilisateur externe ne peut accéder à vos données.',
+    a: 'Oui. Chaque boutique dispose de son espace entièrement isolé — aucun autre utilisateur externe ne peut y accéder.',
   },
-];
-
-const NAV_ITEMS = [
-  { label: 'Tableau de bord', active: true },
-  { label: 'Stocks' },
-  { label: 'Ventes' },
-  { label: 'Clients' },
-  { label: 'Trésorerie' },
-  { label: 'Rapports' },
-];
-
-const KPIS = [
-  { label: 'Ventes du jour', val: 124500, suffix: ' F', badge: '+12%', up: true },
-  { label: 'Produits en stock', val: 347, suffix: '', badge: '3 alertes', up: false },
-  { label: 'Dettes clients', val: 89200, suffix: ' F', badge: '5 impayés', up: false },
-  { label: 'Marge nette', val: 31, suffix: ' %', badge: '+3 pts', up: true },
+  {
+    q: "Dois-je saisir mon catalogue produit par produit ?",
+    a: "Non, vous pouvez importer tout votre catalogue d'un coup depuis un fichier Excel — pratique si vous avez déjà une liste de produits.",
+  },
 ];
 
 const LEDGER_SEED = [
@@ -240,25 +251,8 @@ function useCountUp(target, active, duration = 1100) {
   return value;
 }
 
-function KpiCard({ kpi }) {
-  const [ref, visible] = useReveal(0.4);
-  const value = useCountUp(kpi.val, visible);
-  return (
-    <div ref={ref} className="rounded-xl border border-ink900/8 bg-white p-4">
-      <p className="text-xs text-ink900/45">{kpi.label}</p>
-      <p className="mt-1 font-mono text-lg font-medium text-ink900">
-        {value.toLocaleString('fr-FR')}
-        {kpi.suffix}
-      </p>
-      <span className={`mt-2 inline-block font-mono text-[11px] ${kpi.up ? 'text-success' : 'text-danger'}`}>
-        {kpi.badge}
-      </span>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
-/* Le carnet — démo interactive du suivi de dettes                     */
+/* Le carnet — démo interactive du suivi de dettes (mécanique réelle)  */
 /* ------------------------------------------------------------------ */
 
 function LedgerDemo() {
@@ -267,7 +261,7 @@ function LedgerDemo() {
   const [receiptNo, setReceiptNo] = useState(0);
 
   const solde = entries.reduce((acc, e) => acc + (e.type === 'dette' ? e.montant : -e.montant), 0);
-  const solde_zero = solde <= 0;
+  const soldeZero = solde <= 0;
 
   const handlePayment = () => {
     if (queue.length === 0) return;
@@ -279,7 +273,7 @@ function LedgerDemo() {
         id: prev.length + 1,
         type: 'paiement',
         label: 'Ama Mensah',
-        note: `Facture N°${String(nextNo).padStart(4, '0')} générée`,
+        note: `Paiement enregistré`,
         montant,
       },
     ]);
@@ -295,7 +289,6 @@ function LedgerDemo() {
 
   return (
     <div className="relative mx-auto w-full max-w-sm rotate-1 motion-safe:transition-transform motion-safe:hover:rotate-0 motion-safe:duration-500">
-      {/* trous de reliure */}
       <div className="absolute -top-2.5 left-8 right-8 z-10 flex justify-between">
         {Array.from({ length: 7 }).map((_, i) => (
           <span key={i} className="h-3 w-3 rounded-full bg-paper ring-2 ring-ink900/15" />
@@ -313,9 +306,9 @@ function LedgerDemo() {
         <div className="relative px-6 pb-2">
           <span className="absolute left-3 top-0 h-full w-px bg-danger/35" />
           <p className="pl-4 font-mono text-[10px] uppercase tracking-[0.16em] text-ink900/40">
-            Carnet de crédit
+            Fiche client — dette
           </p>
-          <p className="pl-4 font-display text-sm font-semibold text-ink900">Cliente : Ama Mensah</p>
+          <p className="pl-4 font-display text-sm font-semibold text-ink900">Ama Mensah</p>
         </div>
 
         <div className="relative space-y-1 px-6 pb-3">
@@ -342,16 +335,25 @@ function LedgerDemo() {
           <span className="absolute left-3 top-0 h-full w-px bg-danger/35" />
           <div className="flex items-center justify-between pl-4">
             <span className="text-xs font-medium uppercase tracking-wide text-ink900/50">
-              Solde du compte
+              Dette restante
             </span>
-            <span className={`font-mono text-lg font-semibold ${solde_zero ? 'text-success' : 'text-ink900'}`}>
-              {solde_zero ? 'Soldé ✓' : `${solde.toLocaleString('fr-FR')} F`}
+            <span className={`font-mono text-lg font-semibold ${soldeZero ? 'text-success' : 'text-ink900'}`}>
+              {soldeZero ? 'Soldée ✓' : `${solde.toLocaleString('fr-FR')} F`}
             </span>
           </div>
         </div>
       </div>
 
       <div className="mt-4 flex items-center justify-center gap-3">
+        {/* {!soldeZero && (
+          <Button
+            variant="ghost"
+            className="border-success/30 px-3 py-2 text-sm text-success"
+            onClick={() => window.open('https://wa.me/22890000000?text=' + encodeURIComponent('Bonjour Ama, un rappel amical concernant votre dette.'), '_blank')}
+          >
+            Relancer sur WhatsApp
+          </Button>
+        )} */}
         <Button
           variant="boutique"
           onClick={handlePayment}
@@ -419,32 +421,73 @@ function FaqAccordion({ items }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Sélecteur de plan interactif                                        */
+/* Footer                                                                */
 /* ------------------------------------------------------------------ */
 
-function PlanSlider({ count, onChange }) {
+const FOOTER_LIENS = {
+  Produit: [
+    { label: 'Fonctionnalités', href: '#features' },
+    { label: 'Comment ça marche', href: '#comment-ca-marche' },
+    { label: 'Créer ma boutique', to: '/inscription' },
+  ],
+  Ressources: [
+    { label: 'Questions fréquentes', href: '#faq' },
+    { label: 'Se connecter', to: '/connexion' },
+  ],
+};
+
+function PiedDePage() {
   return (
-    <div className="mx-auto mb-10 max-w-md rounded-xl border border-ink900/10 bg-white p-5 text-left">
-      <label htmlFor="product-count" className="flex items-center justify-between text-sm font-medium text-ink900/70">
-        <span>Combien de produits gérez-vous ?</span>
-        <span className="font-mono text-ink900">{count}</span>
-      </label>
-      <input
-        id="product-count"
-        type="range"
-        min="10"
-        max="500"
-        step="10"
-        value={count}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-3 w-full accent-indigo-700"
-      />
-      <p className="mt-3 text-xs text-ink900/50">
-        {count <= 100
-          ? 'Le plan Starter couvre largement votre catalogue.'
-          : "Au-delà de 100 produits, le plan Pro évite de surveiller la limite."}
-      </p>
-    </div>
+    <footer className="relative z-10 border-t border-ink900/10 bg-indigo-950 text-paper">
+      <div className="mx-auto max-w-6xl px-6 py-16">
+        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
+          <div>
+            <Link to="/" className="font-display text-2xl font-semibold tracking-tight">
+              Miabé<span className="text-ochre-500">Stock</span>
+            </Link>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-indigo-500">
+              Le carnet de votre boutique, enfin numérique. Ventes, stock, dettes clients et
+              trésorerie, pensé pour les commerçants togolais.
+            </p>
+            <p className="mt-6 font-mono text-xs text-indigo-700" title="« Bienvenue » en langue éwé, parlée à Lomé">
+              Woezor 👋 — Lomé, Togo
+            </p>
+          </div>
+
+          {Object.entries(FOOTER_LIENS).map(([titre, liens]) => (
+            <div key={titre}>
+              <p className="font-mono text-xs uppercase tracking-[0.18em] text-ochre-500 mb-4">
+                {titre}
+              </p>
+              <ul className="space-y-3 text-sm">
+                {liens.map((lien) => (
+                  <li key={lien.label}>
+                    {lien.to ? (
+                      <Link to={lien.to} className="text-indigo-500 hover:text-paper transition-colors">
+                        {lien.label}
+                      </Link>
+                    ) : (
+                      <a href={lien.href} className="text-indigo-500 hover:text-paper transition-colors">
+                        {lien.label}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-14 flex flex-col gap-4 border-t border-indigo-800/60 pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-mono text-xs text-indigo-700">
+            © {new Date().getFullYear()} MiabeStock — Tous droits réservés
+          </p>
+          <p className="font-mono text-xs text-indigo-700">
+            Application de gestion commerciale multi-boutique
+          </p>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -454,8 +497,6 @@ function PlanSlider({ count, onChange }) {
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
-  const [productCount, setProductCount] = useState(80);
-  const recommended = productCount <= 100 ? 'starter' : 'pro';
 
   useEffect(() => {
     setMounted(true);
@@ -515,7 +556,7 @@ export default function Home() {
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
             <Link to="/inscription">
               <Button variant="boutique" className="px-6 py-3 text-base">
-                Commencer gratuitement
+                Créer ma boutique
               </Button>
             </Link>
             <a href="#features">
@@ -525,7 +566,7 @@ export default function Home() {
             </a>
           </div>
           <p className="mt-6 text-xs text-ink900/40">
-            À droite : suivez le compte-crédit d&apos;Ama en direct, comme dans le vrai cahier.
+            À droite : la fiche dette d&apos;Ama Mensah, mise à jour en direct.
           </p>
         </div>
 
@@ -546,134 +587,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Preview dashboard */}
-      <section className="relative z-10 mx-auto max-w-6xl px-6 py-20">
-        <div className="mb-10 text-center">
-          <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-ochre-600">Interface</p>
-          <h2 className="font-display text-2xl font-semibold text-ink900 sm:text-3xl">
-            Tout ce qu&apos;il vous faut, d&apos;un coup d&apos;œil
-          </h2>
-        </div>
-
-        <div className="overflow-hidden rounded-2xl border border-ink900/10 bg-white shadow-[0_24px_80px_-24px_rgba(21,39,71,0.35)]">
-          <div className="flex items-center gap-2 border-b border-ink900/8 bg-paper/80 px-4 py-3">
-            <span className="h-2.5 w-2.5 rounded-full bg-danger/80" />
-            <span className="h-2.5 w-2.5 rounded-full bg-warning/80" />
-            <span className="relative h-2.5 w-2.5 rounded-full bg-success/80">
-              <span className="absolute inset-0 animate-ping rounded-full bg-success/60" />
-            </span>
-            <span className="ml-3 font-mono text-xs text-ink900/40">app.miabestock.com/dashboard</span>
-          </div>
-
-          <div className="grid lg:grid-cols-[220px_1fr]">
-            <aside className="hidden border-r border-ink900/8 bg-indigo-950 p-5 text-paper lg:block">
-              <div className="mb-8 font-display text-sm font-semibold tracking-tight">MiabéStock</div>
-              <div className="space-y-1">
-                {NAV_ITEMS.map((item) => (
-                  <div
-                    key={item.label}
-                    className={`rounded-lg px-3 py-2.5 text-sm ${
-                      item.active
-                        ? 'bg-indigo-700/40 text-paper'
-                        : 'text-indigo-500 hover:bg-white/5'
-                    }`}
-                  >
-                    {item.label}
-                  </div>
-                ))}
-              </div>
-            </aside>
-
-            <div className="bg-paper p-5 sm:p-6">
-              <p className="mb-5 font-display text-base font-semibold text-ink900">
-                Bonjour, Kofi — Voici votre journée
-              </p>
-
-              <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
-                {KPIS.map((kpi) => (
-                  <KpiCard key={kpi.label} kpi={kpi} />
-                ))}
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-xl border border-ink900/8 bg-white p-4">
-                  <p className="mb-4 text-xs font-medium text-ink900/50">Ventes — 6 derniers mois</p>
-                  <div className="flex h-28 items-end gap-2">
-                    {[40, 55, 45, 70, 60, 85].map((h, i) => (
-                      <div
-                        key={h + i}
-                        className={`flex-1 rounded-t motion-safe:transition-all motion-safe:duration-700 ${
-                          i === 5 ? 'bg-ochre-500' : 'bg-indigo-600/70'
-                        }`}
-                        style={{ height: `${h}%` }}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-2 flex justify-between font-mono text-[10px] text-ink900/35">
-                    {['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'].map((m) => (
-                      <span key={m}>{m}</span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-ink900/8 bg-white p-4">
-                  <p className="mb-4 text-xs font-medium text-ink900/50">Top catégories</p>
-                  <div className="flex items-center gap-5">
-                    <svg width="80" height="80" viewBox="0 0 36 36" aria-hidden="true">
-                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E8E4DC" strokeWidth="3" />
-                      <circle
-                        cx="18"
-                        cy="18"
-                        r="15.9"
-                        fill="none"
-                        stroke="#1E3F73"
-                        strokeWidth="3"
-                        strokeDasharray="45 55"
-                        strokeDashoffset="25"
-                        transform="rotate(-90 18 18)"
-                      />
-                      <circle
-                        cx="18"
-                        cy="18"
-                        r="15.9"
-                        fill="none"
-                        stroke="#3E6BAE"
-                        strokeWidth="3"
-                        strokeDasharray="28 72"
-                        strokeDashoffset="-20"
-                        transform="rotate(-90 18 18)"
-                      />
-                      <circle
-                        cx="18"
-                        cy="18"
-                        r="15.9"
-                        fill="none"
-                        stroke="#C97F2E"
-                        strokeWidth="3"
-                        strokeDasharray="27 73"
-                        strokeDashoffset="-48"
-                        transform="rotate(-90 18 18)"
-                      />
-                    </svg>
-                    <div className="space-y-2 text-xs text-ink900/70">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-indigo-700" /> Alimentation 45%
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-indigo-500" /> Boissons 28%
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-ochre-500" /> Autres 27%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Features */}
       <section id="features" className="relative z-10 mx-auto max-w-6xl px-6 py-20">
         <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-ochre-600">Fonctionnalités</p>
@@ -681,7 +594,7 @@ export default function Home() {
           Tout ce dont votre commerce a besoin
         </h2>
         <p className="mt-3 max-w-xl text-ink900/60">
-          Six modules pensés pour s&apos;adapter à votre façon de travailler, pas l&apos;inverse.
+          Huit modules pensés pour s&apos;adapter à votre façon de travailler, pas l&apos;inverse.
         </p>
 
         <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -698,7 +611,7 @@ export default function Home() {
       </section>
 
       {/* How it works */}
-      <section className="relative z-10 border-y border-ink900/8 bg-indigo-950 text-paper">
+      <section id="comment-ca-marche" className="relative z-10 border-y border-ink900/8 bg-indigo-950 text-paper">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="text-center">
             <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-ochre-500">
@@ -720,96 +633,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section className="relative z-10 mx-auto max-w-5xl px-6 py-20 text-center">
-        <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-ochre-600">Tarifs</p>
-        <h2 className="font-display text-2xl font-semibold text-ink900 sm:text-3xl">
-          Simple et transparent
-        </h2>
-        <p className="mx-auto mt-3 max-w-md text-ink900/60">
-          Commencez gratuitement. Évoluez quand vous en avez besoin.
-        </p>
-
-        <PlanSlider count={productCount} onChange={setProductCount} />
-
-        <div className="grid gap-6 text-left md:grid-cols-2">
-          <div
-            className={`rounded-2xl border bg-white p-8 motion-safe:transition-all motion-safe:duration-300 ${
-              recommended === 'starter'
-                ? 'border-ochre-500 ring-2 ring-ochre-500/60'
-                : 'border-ink900/10 opacity-80'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <p className="font-display text-lg font-semibold text-ink900">Starter</p>
-              {recommended === 'starter' && (
-                <span className="rounded-full bg-ochre-500/15 px-2.5 py-1 font-mono text-[10px] font-medium text-ochre-600">
-                  Fait pour vous
-                </span>
-              )}
-            </div>
-            <p className="mt-2 font-display text-3xl font-semibold text-ink900">Gratuit</p>
-            <p className="mt-2 text-sm text-ink900/55">
-              Pour démarrer et tester la plateforme sans engagement.
-            </p>
-            <ul className="mt-6 space-y-2.5 text-sm text-ink900/70">
-              {['1 boutique', 'Jusqu’à 100 produits', 'Gestion des ventes', 'Suivi des dettes'].map(
-                (item) => (
-                  <li key={item} className="flex gap-2">
-                    <span className="text-ochre-500">✓</span> {item}
-                  </li>
-                )
-              )}
-            </ul>
-            <Link to="/inscription" className="mt-8 block">
-              <Button variant="ghost" className="w-full border-ink900/15 text-ink900">
-                Commencer
-              </Button>
-            </Link>
-          </div>
-
-          <div
-            className={`relative rounded-2xl border bg-indigo-950 p-8 text-paper motion-safe:transition-all motion-safe:duration-300 ${
-              recommended === 'pro'
-                ? 'border-ochre-500 ring-2 ring-ochre-500/60'
-                : 'border-indigo-700/30 opacity-80'
-            }`}
-          >
-            <span className="absolute -top-3 left-8 rounded-full bg-ochre-500 px-3 py-1 font-mono text-[11px] font-medium text-white">
-              {recommended === 'pro' ? 'Fait pour vous' : 'Le plus choisi'}
-            </span>
-            <p className="font-display text-lg font-semibold">Pro</p>
-            <p className="mt-2 font-display text-3xl font-semibold">
-              9 900 F<span className="text-base font-normal text-indigo-500">/mois</span>
-            </p>
-            <p className="mt-2 text-sm text-indigo-500">
-              Pour les boutiques actives qui veulent tout contrôler.
-            </p>
-            <ul className="mt-6 space-y-2.5 text-sm text-indigo-500">
-              {[
-                'Boutiques illimitées',
-                'Produits illimités',
-                "Gestion d'équipe complète",
-                'Rapports & exports PDF',
-                'Alertes automatiques',
-                'Support prioritaire',
-              ].map((item) => (
-                <li key={item} className="flex gap-2 text-paper/85">
-                  <span className="text-ochre-500">✓</span> {item}
-                </li>
-              ))}
-            </ul>
-            <Link to="/inscription" className="mt-8 block">
-              <Button variant="boutique" className="w-full">
-                Essayer 14 jours gratuit
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* FAQ */}
-      <section className="relative z-10 border-t border-ink900/8 bg-white/50">
+      <section id="faq" className="relative z-10 border-t border-ink900/8 bg-white/50">
         <div className="mx-auto max-w-3xl px-6 py-20">
           <div className="mb-10 text-center">
             <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-ochre-600">FAQ</p>
@@ -837,17 +662,7 @@ export default function Home() {
         </Link>
       </section>
 
-      <footer className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-8 text-sm text-ink900/40">
-        <span className="font-display text-lg font-semibold tracking-tight text-indigo-700">
-          Miabé<span className="text-ochre-500">Stock</span>
-        </span>
-        <span className="flex items-center gap-3">
-          <span className="hidden font-mono text-[11px] text-ink900/30 sm:inline" title="« Bienvenue » en langue éwé, parlée à Lomé">
-            Woezor 👋
-          </span>
-          © {new Date().getFullYear()} MiabéStock — Tous droits réservés
-        </span>
-      </footer>
+      <PiedDePage />
     </div>
   );
 }

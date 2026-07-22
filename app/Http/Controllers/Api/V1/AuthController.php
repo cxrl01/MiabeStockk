@@ -79,7 +79,9 @@ class AuthController extends Controller
             return response()->json(['message' => 'Compte désactivé. Contactez votre gérant.'], 403);
         }
 
-        if ($user->boutique_id && ! $user->boutique->isActive()) {
+        // Couvre a la fois le staff (boutique_id) et le gerant (boutiquesGerees) —
+        // aAccesActif() gere les deux cas (voir User.php).
+        if (! $user->aAccesActif()) {
             Auth::logout();
 
             return response()->json(['message' => 'Boutique suspendue. Contactez le support.'], 403);

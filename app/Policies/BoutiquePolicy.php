@@ -8,7 +8,8 @@ use App\Models\User;
 class BoutiquePolicy
 {
     // Consultation ouverte a tout membre de la boutique (Dashboard, etc. en
-    // ont besoin pour afficher le nom/devise/tva de leur boutique).
+    // ont besoin pour afficher le nom/devise/tva de leur boutique), et au
+    // Super Admin sur n'importe quelle boutique (supervision).
     public function viewAny(User $user): bool
     {
         return true;
@@ -16,7 +17,7 @@ class BoutiquePolicy
 
     public function view(User $user, Boutique $boutique): bool
     {
-        return $user->appartientABoutique($boutique->id);
+        return $user->hasRole('super_admin') || $user->appartientABoutique($boutique->id);
     }
 
     // Creer une boutique supplementaire : reserve au Gerant, et seulement
@@ -34,6 +35,20 @@ class BoutiquePolicy
             && $user->boutiquesGerees()->where('id', $boutique->id)->exists();
     }
 
-    // Pas de delete() : "Supprimer boutique" (Tableau 6) appartient au Super
-    // Admin uniquement, deja hors du perimetre de cette Policy cote Gerant.
+    // Tableau 6 : "Suspendre / Reactiver / Supprimer boutique" = Super Admin
+    // uniquement, sur n'importe quelle boutique de la plateforme.
+    public function suspendre(User $user, Boutique $boutique): bool
+    {
+        return $user->hasRole('super_admin');
+    }
+
+    public function reactiver(User $user, Boutique $boutique): bool
+    {
+        return $user->hasRole('super_admin');
+    }
+
+    public function delete(User $user, Boutique $boutique): bool
+    {
+        return $user->hasRole('super_admin');
+    }
 }

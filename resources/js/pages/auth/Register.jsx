@@ -12,7 +12,6 @@ const CHAMPS_INITIAUX = {
   email: '',
   password: '',
   password_confirmation: '',
-  multi_points_vente: null,
 };
 
 /** Découpe "Nom du propriétaire" en prenom + nom pour l'API. */
@@ -43,24 +42,11 @@ export default function Register() {
     });
   };
 
-  const choisirMulti = (valeur) => {
-    setForm((f) => ({ ...f, multi_points_vente: valeur }));
-    setErreurs((err) => ({ ...err, multi_points_vente: undefined }));
-  };
-
   const soumettre = async (e) => {
     e.preventDefault();
     setErreurGenerale('');
-
-    if (form.multi_points_vente === null) {
-      setErreurs((err) => ({
-        ...err,
-        multi_points_vente: 'Indiquez si vous avez plusieurs points de vente.',
-      }));
-      return;
-    }
-
     setChargement(true);
+
     const { prenom, nom } = decomposerProprietaire(form.proprietaire);
 
     try {
@@ -71,7 +57,6 @@ export default function Register() {
         email: form.email,
         password: form.password,
         password_confirmation: form.password_confirmation,
-        multi_points_vente: form.multi_points_vente,
       });
       navigate('/dashboard');
     } catch (error) {
@@ -123,49 +108,6 @@ export default function Register() {
           error={erreurs.proprietaire}
           required
         />
-
-        <fieldset>
-          <legend className="mb-1.5 block text-sm font-medium text-ink900/80">
-            Avez-vous plusieurs points de vente ou succursales ?
-          </legend>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => choisirMulti(true)}
-              className={`rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-colors ${
-                form.multi_points_vente === true
-                  ? 'border-ochre-500 bg-ochre-500/10 text-ochre-600'
-                  : 'border-ink900/15 bg-white text-ink900/70 hover:border-ink900/30'
-              }`}
-            >
-              Oui
-            </button>
-            <button
-              type="button"
-              onClick={() => choisirMulti(false)}
-              className={`rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-colors ${
-                form.multi_points_vente === false
-                  ? 'border-indigo-700 bg-indigo-700/5 text-indigo-700'
-                  : 'border-ink900/15 bg-white text-ink900/70 hover:border-ink900/30'
-              }`}
-            >
-              Non, un seul
-            </button>
-          </div>
-          {form.multi_points_vente === true && (
-            <p className="mt-2 text-xs leading-relaxed text-ink900/50">
-              Vous pourrez ajouter et gérer plusieurs succursales depuis votre espace.
-            </p>
-          )}
-          {form.multi_points_vente === false && (
-            <p className="mt-2 text-xs leading-relaxed text-ink900/50">
-              Parfait pour démarrer. Vous pourrez activer le multi-points de vente plus tard.
-            </p>
-          )}
-          {erreurs.multi_points_vente && (
-            <p className="mt-1.5 text-sm text-danger">{erreurs.multi_points_vente}</p>
-          )}
-        </fieldset>
 
         <TextField
           id="email"

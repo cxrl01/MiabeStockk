@@ -96,15 +96,15 @@ export default function RapportsStats() {
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
           <h2 className="font-display font-semibold text-ink900 mb-1">Chiffre d'affaires mensuel</h2>
           <p className="text-xs text-ink900/40 mb-4">Depuis janvier {new Date().getFullYear()}</p>
-          <div className="flex items-end gap-2 h-40">
+          <div className="flex gap-2 h-40">
             {(stats?.ca_mensuel ?? []).map((m) => (
-              <div key={m.mois} className="flex-1 flex flex-col items-center gap-1">
+              <div key={m.mois} className="flex-1 flex flex-col justify-end items-center gap-1 h-full">
                 <div
                   className="w-full bg-indigo-700/15 rounded-t"
                   style={{ height: `${Math.max(4, (m.total / maxCa) * 100)}%` }}
                   title={formatMontant(m.total)}
                 />
-                <span className="text-[10px] text-ink900/40">{NOMS_MOIS[m.mois - 1]}</span>
+                <span className="text-[10px] text-ink900/40 shrink-0">{NOMS_MOIS[m.mois - 1]}</span>
               </div>
             ))}
           </div>
@@ -113,15 +113,15 @@ export default function RapportsStats() {
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
           <h2 className="font-display font-semibold text-ink900 mb-1">Nombre de ventes</h2>
           <p className="text-xs text-ink900/40 mb-4">Depuis janvier {new Date().getFullYear()}</p>
-          <div className="flex items-end gap-2 h-40">
+          <div className="flex gap-2 h-40">
             {(stats?.ventes_mensuel ?? []).map((m) => (
-              <div key={m.mois} className="flex-1 flex flex-col items-center gap-1">
+              <div key={m.mois} className="flex-1 flex flex-col justify-end items-center gap-1 h-full">
                 <div
                   className="w-full bg-success/15 rounded-t"
                   style={{ height: `${Math.max(4, (m.nombre / maxVentes) * 100)}%` }}
                   title={`${m.nombre} ventes`}
                 />
-                <span className="text-[10px] text-ink900/40">{NOMS_MOIS[m.mois - 1]}</span>
+                <span className="text-[10px] text-ink900/40 shrink-0">{NOMS_MOIS[m.mois - 1]}</span>
               </div>
             ))}
           </div>

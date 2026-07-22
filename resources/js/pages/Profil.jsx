@@ -24,7 +24,10 @@ function formatDate(dateStr) {
 export default function Profil() {
   const { user, setUser } = useAuth();
 
-  const boutiqueNom = user?.boutique?.nom || user?.boutiques_gerees?.[0]?.nom || 'Ma boutique';
+  const estSuperAdmin = user?.role?.nom === 'super_admin';
+  const boutiqueNom = estSuperAdmin
+    ? 'MiabéStock'
+    : (user?.boutique?.nom || user?.boutiques_gerees?.[0]?.nom || 'Ma boutique');
   const roleLibelle = user?.role?.libelle || '';
   const nomComplet = `${user?.prenom ?? ''} ${user?.nom ?? ''}`.trim();
   const initiales = `${user?.prenom?.charAt(0) ?? ''}${user?.nom?.charAt(0) ?? ''}`.toUpperCase();

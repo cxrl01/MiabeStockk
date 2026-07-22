@@ -78,4 +78,26 @@ class User extends Authenticatable
 
         return $this->boutique_id === $boutiqueId;
     }
+
+    /**
+     * Utilisé par CheckBoutiqueActive (middleware, à chaque requête) et par
+     * AuthController::login() : détermine si l'utilisateur a encore un accès
+     * valide compte tenu du statut de sa/ses boutique(s). super_admin n'est
+     * jamais concerné (aucune boutique ne lui est rattachée). Un Gérant
+     * garde l'accès tant qu'il possède AU MOINS une boutique active (mode
+     * multi points de vente) — pas besoin que toutes le soient.
+     */
+    public function aAccesActif(): bool
+    {
+        if ($this->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($this->hasRole('gerant')) {
+            return $this->boutiquesGerees()->where('statut', 'active')->exists();
+        }
+
+        // Staff (gestionnaire/commercial) : sa boutique unique doit être active.
+        return $this->boutique_id && $this->boutique?->isActive();
+    }
 }

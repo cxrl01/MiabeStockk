@@ -23,6 +23,10 @@ import DepensesListe from '../pages/depenses/DepensesListe';
 import DepenseForm from '../pages/depenses/DepenseForm';
 import RapportsStats from '../pages/rapports/RapportsStats';
 import Administration from '../pages/administration/Administration';
+import AdminVueEnsemble from '../pages/admin/AdminVueEnsemble';
+import AdminBoutiques from '../pages/admin/AdminBoutiques';
+import AdminBoutiqueDetail from '../pages/admin/AdminBoutiqueDetail';
+import AdminJournal from '../pages/admin/AdminJournal';
 import PageAVenir from '../components/layout/PageAVenir';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -170,7 +174,31 @@ export default function AppRoutes() {
         path="/admin"
         element={
           <ProtectedRoute rolesAutorises={['super_admin']}>
-            <div className="p-10">Dashboard Super Admin (à venir)</div>
+            <AdminVueEnsemble />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/boutiques"
+        element={
+          <ProtectedRoute rolesAutorises={['super_admin']}>
+            <AdminBoutiques />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/boutiques/:id"
+        element={
+          <ProtectedRoute rolesAutorises={['super_admin']}>
+            <AdminBoutiqueDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/journal"
+        element={
+          <ProtectedRoute rolesAutorises={['super_admin']}>
+            <AdminJournal />
           </ProtectedRoute>
         }
       />
