@@ -7,12 +7,14 @@ use App\Http\Requests\StoreCategorieRequest;
 use App\Http\Requests\UpdateCategorieRequest;
 use App\Models\Categorie;
 use App\Traits\JournaliseActivite;
+use App\Traits\ResolveBoutiqueActive;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class CategorieController extends Controller
 {
     use JournaliseActivite;
+    use ResolveBoutiqueActive;
 
     public function index(): JsonResponse
     {
@@ -24,10 +26,8 @@ class CategorieController extends Controller
 
         if ($user->hasRole('super_admin')) {
             //
-        } elseif ($user->hasRole('gerant')) {
-            $query->whereIn('boutique_id', $user->boutiquesGerees()->pluck('id'));
         } else {
-            $query->where('boutique_id', $user->boutique_id);
+            $query->where('boutique_id', $this->boutiqueActive());
         }
 
         return response()->json($query->orderBy('nom')->get());
@@ -37,11 +37,8 @@ class CategorieController extends Controller
     {
         $this->authorize('create', Categorie::class);
 
-        $user = Auth::user();
-        $boutiqueId = $user->boutique_id ?? $request->integer('boutique_id');
-
         $categorie = Categorie::create([
-            'boutique_id' => $boutiqueId,
+            'boutique_id' => $this->boutiqueActive(),
             'nom' => $request->validated('nom'),
         ]);
 

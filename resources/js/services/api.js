@@ -14,6 +14,18 @@ export async function initCsrf() {
 
 api.defaults.withCredentials = true;
 
+// Ajoute la boutique active (choisie par un Gerant multi-points-de-vente,
+// voir BoutiqueActiveContext) a chaque requete sortante. Lu depuis
+// localStorage plutot que le contexte React, car ce fichier est hors de
+// l'arbre de composants et ne peut pas utiliser useContext.
+api.interceptors.request.use((config) => {
+  const boutiqueId = localStorage.getItem('boutiqueActiveId');
+  if (boutiqueId) {
+    config.headers['X-Boutique-Id'] = boutiqueId;
+  }
+  return config;
+});
+
 // Normalise les erreurs de validation Laravel (422) pour un usage direct
 // dans les formulaires : { champ: 'message' }.
 export function extraireErreursValidation(error) {

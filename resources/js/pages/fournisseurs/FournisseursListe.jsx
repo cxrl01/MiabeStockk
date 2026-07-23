@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import { useAuth } from '../../hooks/useAuth';
+import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
 
 export default function FournisseursListe() {
   const { user } = useAuth();
+  const { boutiqueActiveId } = useBoutiqueActive();
   const [fournisseurs, setFournisseurs] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
@@ -21,7 +23,8 @@ export default function FournisseursListe() {
       .catch(() => setErreur("Impossible de charger les fournisseurs."));
   };
 
-  useEffect(charger, []);
+  // Recharge quand la boutique active change (sélecteur multi-points-de-vente).
+  useEffect(charger, [boutiqueActiveId]);
 
   const fournisseursFiltres = (fournisseurs || []).filter((f) =>
     f.nom.toLowerCase().includes(recherche.toLowerCase())

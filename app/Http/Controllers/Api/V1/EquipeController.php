@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateEmployeRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Traits\JournaliseActivite;
+use App\Traits\ResolveBoutiqueActive;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,16 +17,19 @@ use RuntimeException;
 class EquipeController extends Controller
 {
     use JournaliseActivite;
+    use ResolveBoutiqueActive;
 
     /**
-     * Personnel (Gestionnaire, Commercial) des boutiques du Gerant connecte.
-     * Contrairement a Produit/Client/Fournisseur, pas de cas Super Admin ni
-     * staff ici : seul un Gerant appelle ces routes (verrouille par la Policy).
+     * Personnel (Gestionnaire, Commercial) de la boutique ACTIVE du Gerant
+     * connecte (header X-Boutique-Id) — plus le melange de tout le personnel
+     * de toutes ses boutiques. Contrairement a Produit/Client/Fournisseur,
+     * pas de cas Super Admin ni staff ici : seul un Gerant appelle ces routes
+     * (verrouille par la Policy).
      */
-    private function baseQuery(User $gerant): \Illuminate\Database\Eloquent\Builder
+    private function baseQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return User::query()
-            ->whereIn('boutique_id', $gerant->boutiquesGerees()->pluck('id'))
+            ->where('boutique_id', $this->boutiqueActive())
             ->whereHas('role', fn ($q) => $q->whereIn('nom', ['gestionnaire', 'commercial']));
     }
 
@@ -33,11 +37,7 @@ class EquipeController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $query = $this->baseQuery(Auth::user())->with('role');
-
-        if ($request->filled('boutique_id')) {
-            $query->where('boutique_id', $request->integer('boutique_id'));
-        }
+        $query = $this->baseQuery()->with('role');
 
         return response()->json($query->orderBy('nom')->get());
     }
@@ -46,22 +46,16 @@ class EquipeController extends Controller
     {
         $this->authorize('create', User::class);
 
-        $gerant = Auth::user();
+        $boutiqueId = $this->boutiqueActive();
 
-        try {
-            $boutique = $request->filled('boutique_id')
-                ? $gerant->boutiquesGerees()->findOrFail($request->integer('boutique_id'))
-                : $gerant->boutiquesGerees()->firstOr(function () {
-                    throw new RuntimeException('Aucune boutique associée à ce compte gérant.');
-                });
-        } catch (RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+        if (! $boutiqueId) {
+            return response()->json(['message' => 'Aucune boutique associée à ce compte gérant.'], 422);
         }
 
         $role = Role::where('nom', $request->validated('role'))->firstOrFail();
 
         $employe = User::create([
-            'boutique_id' => $boutique->id,
+            'boutique_id' => $boutiqueId,
             'role_id' => $role->id,
             'nom' => $request->validated('nom'),
             'prenom' => $request->validated('prenom'),

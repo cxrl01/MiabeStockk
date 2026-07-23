@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import Button from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
+import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api, { extraireErreursValidation } from '../../services/api';
 import { formatMontant } from '../../lib/format';
 
@@ -16,6 +17,7 @@ const MODES_PAIEMENT = [
 export default function NouvelleVente() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { boutiqueActiveId, boutiquesGerees } = useBoutiqueActive();
 
   const [produits, setProduits] = useState([]);
   const [clients, setClients] = useState([]);
@@ -30,6 +32,9 @@ export default function NouvelleVente() {
   const [venteReussie, setVenteReussie] = useState(null);
   const [modalClientOuvert, setModalClientOuvert] = useState(false);
 
+  // Recharge le catalogue et les clients quand la boutique active change
+  // (sélecteur multi-points-de-vente du Gérant) — l'intercepteur axios envoie
+  // deja le bon header X-Boutique-Id, mais il faut redeclencher l'appel.
   useEffect(() => {
     api.get('/produits', { params: { per_page: 200 } })
       .then(({ data }) => setProduits(data.data))
@@ -38,7 +43,12 @@ export default function NouvelleVente() {
     api.get('/clients', { params: { per_page: 200 } })
       .then(({ data }) => setClients(data.data ?? data))
       .catch(() => {});
-  }, []);
+
+    // Le panier en cours referencait potentiellement des produits de l'ancienne
+    // boutique — on le vide pour eviter d'envoyer un produit_id qui n'appartient
+    // plus a la boutique active (echec 404 cote backend sinon).
+    setPanier({});
+  }, [boutiqueActiveId]);
 
   const produitsFiltres = useMemo(() => {
     const terme = recherche.toLowerCase().trim();
@@ -48,12 +58,12 @@ export default function NouvelleVente() {
     );
   }, [produits, recherche]);
 
-  // Taux de TVA de la boutique du Gérant/staff connecté (chargé avec la
-  // session via AuthController::login/me — voir user.boutique ou
-  // user.boutiques_gerees selon le rôle). Sans ça, "payer la totalité"
-  // calculait un montant HT, toujours inférieur au montant_ttc réel côté
-  // backend, ce qui faisait retomber systématiquement la vente en "partielle".
-  const tauxTva = Number(user?.boutique?.tva ?? user?.boutiques_gerees?.[0]?.tva ?? 0);
+  // Taux de TVA de la boutique ACTIVE (pas systematiquement la premiere
+  // boutique geree) : pour le staff, user.boutique suffit (une seule
+  // boutique) ; pour un Gerant multi-points-de-vente, on cherche la boutique
+  // correspondant a boutiqueActiveId dans boutiquesGerees.
+  const boutiqueActiveObjet = boutiquesGerees.find((b) => b.id === boutiqueActiveId);
+  const tauxTva = Number(boutiqueActiveObjet?.tva ?? user?.boutique?.tva ?? 0);
 
   const totalHt = useMemo(
     () => Object.values(panier).reduce((s, item) => s + item.prix_vente * item.quantite, 0),

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVenteRequest;
 use App\Models\Boutique;
@@ -10,6 +9,7 @@ use App\Models\Commande;
 use App\Models\LigneCommande;
 use App\Models\Produit;
 use App\Traits\JournaliseActivite;
+use App\Traits\ResolveBoutiqueActive;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,11 +20,14 @@ use RuntimeException;
 class VenteController extends Controller
 {
     use JournaliseActivite;
+    use ResolveBoutiqueActive;
 
     /**
      * Liste paginée des ventes, toujours filtrée par boutique : un membre du
-     * staff ne voit que sa boutique, un Gérant voit ses boutiques, un Super
-     * Admin peut préciser ?boutique_id= pour superviser une boutique donnée.
+     * staff ne voit que sa boutique, un Gérant voit sa boutique ACTIVE
+     * (header X-Boutique-Id — plus le melange de toutes ses boutiques), un
+     * Super Admin peut préciser ?boutique_id= pour superviser une boutique
+     * donnée.
      */
     public function index(Request $request): JsonResponse
     {
@@ -38,10 +41,8 @@ class VenteController extends Controller
             if ($request->filled('boutique_id')) {
                 $query->where('boutique_id', $request->integer('boutique_id'));
             }
-        } elseif ($user->hasRole('gerant')) {
-            $query->whereIn('boutique_id', $user->boutiquesGerees()->pluck('id'));
         } else {
-            $query->where('boutique_id', $user->boutique_id);
+            $query->where('boutique_id', $this->boutiqueActive());
         }
 
         if ($request->filled('statut')) {
@@ -66,23 +67,20 @@ class VenteController extends Controller
 
         try {
             // Résolution de la boutique concernée par la vente, selon le rôle :
-            // - Gérant : passe par boutiquesGerees() (pas de boutique_id sur users, un
-            //   Gérant peut posséder plusieurs boutiques). S'il n'en a qu'une, on la prend
-            //   par défaut ; sinon le frontend doit préciser boutique_id (sélecteur de
-            //   boutique active).
-            // - Gestionnaire/Commercial : boutique_id fixe sur users.
-            // - Super Admin : n'a pas de boutique propre, doit préciser boutique_id.
-            $boutique = match (true) {
-                $user->hasRole('gerant') => $request->filled('boutique_id')
-                    ? $user->boutiquesGerees()->findOrFail($request->integer('boutique_id'))
-                    : $user->boutiquesGerees()->firstOr(function () {
-                        throw new RuntimeException('Aucune boutique associée à ce compte gérant.');
-                    }),
-                $user->hasRole('super_admin') => Boutique::findOrFail($request->integer('boutique_id')),
-                default => $user->boutique_id
-                    ? Boutique::findOrFail($user->boutique_id)
-                    : throw new RuntimeException('Utilisateur non rattaché à une boutique.'),
-            };
+            // - Gérant/Gestionnaire/Commercial : boutique active resolue via
+            //   ResolveBoutiqueActive (header X-Boutique-Id pour un Gerant
+            //   multi-points-de-vente, boutique_id fixe pour le staff).
+            // - Super Admin : n'a pas de boutique propre, doit préciser
+            //   boutique_id explicitement dans la requête.
+            $boutiqueId = $user->hasRole('super_admin')
+                ? $request->integer('boutique_id')
+                : $this->boutiqueActive();
+
+            if (! $boutiqueId) {
+                throw new RuntimeException('Aucune boutique associée à ce compte.');
+            }
+
+            $boutique = Boutique::findOrFail($boutiqueId);
 
             $commande = DB::transaction(function () use ($request, $user, $boutique) {
                 $commande = Commande::create([

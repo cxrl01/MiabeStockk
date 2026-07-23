@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateProduitRequest;
 use App\Imports\ProduitsImport;
 use App\Models\Produit;
 use App\Traits\JournaliseActivite;
+use App\Traits\ResolveBoutiqueActive;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,13 @@ use Maatwebsite\Excel\Facades\Excel;
 class ProduitController extends Controller
 {
     use JournaliseActivite;
+    use ResolveBoutiqueActive;
 
+    /**
+     * Filtre sur la boutique active (header X-Boutique-Id) pour un Gerant
+     * multi-points-de-vente, au lieu de melanger toutes ses boutiques dans
+     * une seule liste comme auparavant.
+     */
     private function baseQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $user = Auth::user();
@@ -26,7 +33,7 @@ class ProduitController extends Controller
         if ($user->hasRole('super_admin')) {
             //
         } elseif ($user->hasRole('gerant')) {
-            $query->whereIn('boutique_id', $user->boutiquesGerees()->pluck('id'));
+            $query->where('boutique_id', $this->boutiqueActive());
         } else {
             $query->where('boutique_id', $user->boutique_id);
         }
@@ -73,12 +80,9 @@ class ProduitController extends Controller
     {
         $this->authorize('create', Produit::class);
 
-        $user = Auth::user();
-        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
-
         $produit = Produit::create([
             ...$request->validated(),
-            'boutique_id' => $boutiqueId,
+            'boutique_id' => $this->boutiqueActive(),
             'quantite_stock' => $request->integer('quantite_stock', 0),
         ]);
 
@@ -124,6 +128,8 @@ class ProduitController extends Controller
     /**
      * Import en masse du catalogue depuis un fichier Excel/CSV. Même règle
      * d'autorisation que la création manuelle (ProduitPolicy::create).
+     * Cible desormais la boutique active du Gerant (header), plutot que
+     * systematiquement sa premiere boutique geree.
      */
     public function importer(Request $request): JsonResponse
     {
@@ -133,8 +139,7 @@ class ProduitController extends Controller
             'fichier' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
         ]);
 
-        $user = Auth::user();
-        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
+        $boutiqueId = $this->boutiqueActive();
 
         $import = new ProduitsImport($boutiqueId);
         Excel::import($import, $request->file('fichier'));
@@ -156,21 +161,20 @@ class ProduitController extends Controller
      */
     public function modeleImport()
     {
-        $user = Auth::user();
-        // On récupère l'ID de la boutique pour personnaliser le modèle si nécessaire
-        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
-        
-        return Excel::download(new ModeleImportProduitsExport($boutiqueId), 'modele-import-produits.xlsx');
+        return Excel::download(
+            new ModeleImportProduitsExport($this->boutiqueActive()),
+            'modele-import-produits.xlsx'
+        );
     }
 
     // Pour exporter vos données réelles
     public function export()
     {
         $this->authorize('viewAny', Produit::class);
-        $user = Auth::user();
-        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
 
-    // On utilise la classe ModeleImportProduitsExport que vous aviez configurée pour être dynamique
-        return Excel::download(new \App\Exports\ModeleImportProduitsExport($boutiqueId), 'stock_produits.xlsx');
-    }  
+        return Excel::download(
+            new ModeleImportProduitsExport($this->boutiqueActive()),
+            'stock_produits.xlsx'
+        );
+    }
 }

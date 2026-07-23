@@ -2,11 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { IconMenu, IconSun, IconMoon, IconLogout } from './Icons';
+import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
+import { IconMenu, IconSun, IconMoon, IconLogout, IconBox } from './Icons';
 
 export default function Topbar({ title, onToggleSidebar }) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { boutiqueActiveId, setBoutiqueActiveId, boutiquesGerees, estGerantMulti } = useBoutiqueActive();
   const navigate = useNavigate();
   const [menuOuvert, setMenuOuvert] = useState(false);
   const menuRef = useRef(null);
@@ -51,6 +53,24 @@ export default function Topbar({ title, onToggleSidebar }) {
       </div>
 
       <div className="flex items-center gap-4">
+        {estGerantMulti && (
+          <div className="hidden sm:flex items-center gap-2 rounded-lg border border-ink900/15 bg-white px-2.5 py-1.5">
+            <span className="text-ink900/40">
+              <IconBox />
+            </span>
+            <select
+              value={boutiqueActiveId ?? ''}
+              onChange={(e) => setBoutiqueActiveId(Number(e.target.value))}
+              className="bg-transparent text-sm font-medium text-ink900 focus:outline-none cursor-pointer"
+              aria-label="Boutique active"
+            >
+              {boutiquesGerees.map((b) => (
+                <option key={b.id} value={b.id}>{b.nom}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <span className="hidden sm:block font-mono text-xs text-ink900/40 capitalize">{aujourdhui}</span>
 
         <button

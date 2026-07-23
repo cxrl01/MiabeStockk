@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateFournisseurRequest;
 use App\Models\Commande;
 use App\Models\Fournisseur;
 use App\Traits\JournaliseActivite;
+use App\Traits\ResolveBoutiqueActive;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 class FournisseurController extends Controller
 {
     use JournaliseActivite;
+    use ResolveBoutiqueActive;
 
     private function baseQuery(): \Illuminate\Database\Eloquent\Builder
     {
@@ -23,10 +25,8 @@ class FournisseurController extends Controller
 
         if ($user->hasRole('super_admin')) {
             //
-        } elseif ($user->hasRole('gerant')) {
-            $query->whereIn('boutique_id', $user->boutiquesGerees()->pluck('id'));
         } else {
-            $query->where('boutique_id', $user->boutique_id);
+            $query->where('boutique_id', $this->boutiqueActive());
         }
 
         return $query;
@@ -54,12 +54,9 @@ class FournisseurController extends Controller
     {
         $this->authorize('create', Fournisseur::class);
 
-        $user = Auth::user();
-        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
-
         $fournisseur = Fournisseur::create([
             ...$request->validated(),
-            'boutique_id' => $boutiqueId,
+            'boutique_id' => $this->boutiqueActive(),
         ]);
 
         $this->journaliser('fournisseur.cree', $fournisseur);

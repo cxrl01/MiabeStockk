@@ -10,6 +10,7 @@ use App\Models\Fournisseur;
 use App\Models\LigneCommande;
 use App\Models\Produit;
 use App\Traits\JournaliseActivite;
+use App\Traits\ResolveBoutiqueActive;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,11 +20,12 @@ use RuntimeException;
 class LivraisonController extends Controller
 {
     use JournaliseActivite;
+    use ResolveBoutiqueActive;
 
     /**
-     * Liste paginee des livraisons, meme logique de filtrage par boutique que
-     * VenteController::index() (staff -> sa boutique, gerant -> ses boutiques,
-     * super admin -> ?boutique_id= optionnel).
+     * Liste paginee des livraisons, filtree sur la boutique active (header
+     * X-Boutique-Id) pour un Gerant multi-points-de-vente, comme
+     * VenteController::index().
      */
     public function index(Request $request): JsonResponse
     {
@@ -36,10 +38,8 @@ class LivraisonController extends Controller
             if ($request->filled('boutique_id')) {
                 $query->where('boutique_id', $request->integer('boutique_id'));
             }
-        } elseif ($user->hasRole('gerant')) {
-            $query->whereIn('boutique_id', $user->boutiquesGerees()->pluck('id'));
         } else {
-            $query->where('boutique_id', $user->boutique_id);
+            $query->where('boutique_id', $this->boutiqueActive());
         }
 
         return response()->json($query->latest()->paginate(20));
@@ -63,17 +63,15 @@ class LivraisonController extends Controller
         $user = Auth::user();
 
         try {
-            $boutique = match (true) {
-                $user->hasRole('gerant') => $request->filled('boutique_id')
-                    ? $user->boutiquesGerees()->findOrFail($request->integer('boutique_id'))
-                    : $user->boutiquesGerees()->firstOr(function () {
-                        throw new RuntimeException('Aucune boutique associée à ce compte gérant.');
-                    }),
-                $user->hasRole('super_admin') => Boutique::findOrFail($request->integer('boutique_id')),
-                default => $user->boutique_id
-                    ? Boutique::findOrFail($user->boutique_id)
-                    : throw new RuntimeException('Utilisateur non rattaché à une boutique.'),
-            };
+            $boutiqueId = $user->hasRole('super_admin')
+                ? $request->integer('boutique_id')
+                : $this->boutiqueActive();
+
+            if (! $boutiqueId) {
+                throw new RuntimeException('Aucune boutique associée à ce compte.');
+            }
+
+            $boutique = Boutique::findOrFail($boutiqueId);
 
             $fournisseur = Fournisseur::where('boutique_id', $boutique->id)
                 ->findOrFail($request->integer('fournisseur_id'));

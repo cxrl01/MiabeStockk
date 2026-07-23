@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import Badge from '../../components/ui/Badge';
 import { useAuth } from '../../hooks/useAuth';
+import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 import { formatMontant, formatDate } from '../../lib/format';
 
 export default function VentesListe() {
   const { user } = useAuth();
+  const { boutiqueActiveId } = useBoutiqueActive();
   const [ventes, setVentes] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
@@ -22,7 +24,7 @@ export default function VentesListe() {
       .get('/ventes')
       .then(({ data }) => setVentes(data.data))
       .catch(() => setErreur("Impossible de charger les ventes."));
-  }, []);
+  }, [boutiqueActiveId]);
 
   const ventesFiltrees = (ventes || []).filter((v) => {
     const terme = recherche.toLowerCase();

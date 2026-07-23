@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import { useAuth } from '../../hooks/useAuth';
+import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 import { formatMontant, formatDate } from '../../lib/format';
 
 export default function DepensesListe() {
   const { user } = useAuth();
+  const { boutiqueActiveId } = useBoutiqueActive();
   const [depenses, setDepenses] = useState(null);
   const [tresorerie, setTresorerie] = useState(null);
   const [recherche, setRecherche] = useState('');
@@ -26,7 +28,8 @@ export default function DepensesListe() {
       .catch(() => {});
   };
 
-  useEffect(charger, []);
+  // Recharge quand la boutique active change (sélecteur multi-points-de-vente).
+  useEffect(charger, [boutiqueActiveId]);
 
   const depensesFiltrees = (depenses || []).filter((d) =>
     d.libelle.toLowerCase().includes(recherche.toLowerCase())

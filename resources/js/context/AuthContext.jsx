@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from 'react';
 import api, { initCsrf } from '../services/api';
+import { BoutiqueActiveProvider } from './BoutiqueActiveContext';
 
 export const AuthContext = createContext(null);
 
@@ -39,7 +40,9 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{ user, setUser, chargementInitial, login, register, logout }}>
-      {children}
+      <BoutiqueActiveProvider user={user}>
+        {children}
+      </BoutiqueActiveProvider>
     </AuthContext.Provider>
   );
 }

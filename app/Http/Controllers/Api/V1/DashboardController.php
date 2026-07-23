@@ -30,7 +30,7 @@ class DashboardController extends Controller
         $produitsQuery = fn () => Produit::query()
             ->when($boutiqueIds, fn ($q) => $q->whereIn('boutique_id', $boutiqueIds));
 
-        return response()->json([
+        $donnees = [
             'ventes_jour' => $ventesValideesQuery()->whereDate('created_at', today())->count(),
             'ca_jour' => (float) $ventesValideesQuery()->whereDate('created_at', today())->sum('montant_ttc'),
             'ca_mois' => (float) $ventesValideesQuery()->whereMonth('created_at', now()->month)
@@ -61,6 +61,38 @@ class DashboardController extends Controller
                 ->orderBy('quantite_stock')
                 ->limit(5)
                 ->get(['id', 'nom', 'quantite_stock', 'seuil_alerte']),
-        ]);
+        ];
+
+        // "Comparatif par boutique" (memoire, section Administration de la
+        // boutique) : uniquement pertinent pour un Gerant avec PLUSIEURS
+        // boutiques — sinon le comparatif n'a pas de sens et alourdirait
+        // la reponse pour rien.
+        if ($user->hasRole('gerant')) {
+            $boutiques = $user->boutiquesGerees()->get(['id', 'nom']);
+
+            if ($boutiques->count() > 1) {
+                $donnees['comparatif_boutiques'] = $boutiques->map(function ($boutique) {
+                    $ventesBoutique = fn () => Commande::query()
+                        ->where('type', 'vente')
+                        ->where('statut', 'validee')
+                        ->where('boutique_id', $boutique->id)
+                        ->whereMonth('created_at', now()->month)
+                        ->whereYear('created_at', now()->year);
+
+                    return [
+                        'id' => $boutique->id,
+                        'nom' => $boutique->nom,
+                        'ca_mois' => (float) $ventesBoutique()->sum('montant_ttc'),
+                        'ventes_mois' => $ventesBoutique()->count(),
+                        'produits_en_alerte' => Produit::where('boutique_id', $boutique->id)
+                            ->whereColumn('quantite_stock', '<=', 'seuil_alerte')
+                            ->count(),
+                        'dettes_clients' => (float) Client::where('boutique_id', $boutique->id)->sum('dette'),
+                    ];
+                })->values();
+            }
+        }
+
+        return response()->json($donnees);
     }
 }

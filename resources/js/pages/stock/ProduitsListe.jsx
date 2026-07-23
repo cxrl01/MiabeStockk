@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import Button from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
+import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
 
 export default function ProduitsListe() {
   const { user } = useAuth();
+  const { boutiqueActiveId } = useBoutiqueActive();
   const [produits, setProduits] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
@@ -27,7 +29,9 @@ export default function ProduitsListe() {
       .catch(() => setErreur("Impossible de charger les produits."));
   };
 
-  useEffect(charger, []);
+  // Recharge quand la boutique active change (sélecteur multi-points-de-vente
+  // du Gérant) — le backend filtre desormais sur cette boutique uniquement.
+  useEffect(charger, [boutiqueActiveId]);
 
   const produitsFiltres = (produits || []).filter((p) => {
     const terme = recherche.toLowerCase();

@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
 use App\Models\Paiement;
 use App\Traits\JournaliseActivite;
+use App\Traits\ResolveBoutiqueActive;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 class ClientController extends Controller
 {
     use JournaliseActivite;
+    use ResolveBoutiqueActive;
 
     private function baseQuery()
     {
@@ -23,10 +25,8 @@ class ClientController extends Controller
 
         if ($user->hasRole('super_admin')) {
             //
-        } elseif ($user->hasRole('gerant')) {
-            $query->whereIn('boutique_id', $user->boutiquesGerees()->pluck('id'));
         } else {
-            $query->where('boutique_id', $user->boutique_id);
+            $query->where('boutique_id', $this->boutiqueActive());
         }
 
         return $query;
@@ -51,12 +51,9 @@ class ClientController extends Controller
     {
         $this->authorize('create', Client::class);
 
-        $user = Auth::user();
-        $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->value('id');
-
         $client = Client::create([
             ...$request->validated(),
-            'boutique_id' => $boutiqueId,
+            'boutique_id' => $this->boutiqueActive(),
         ]);
 
         $this->journaliser('client.cree', $client);

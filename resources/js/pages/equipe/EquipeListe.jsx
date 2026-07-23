@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import { useAuth } from '../../hooks/useAuth';
+import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 
 const LABELS_ROLE = {
@@ -11,6 +12,7 @@ const LABELS_ROLE = {
 
 export default function EquipeListe() {
   const { user } = useAuth();
+  const { boutiqueActiveId } = useBoutiqueActive();
   const [employes, setEmployes] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
@@ -27,7 +29,9 @@ export default function EquipeListe() {
       .catch(() => setErreur("Impossible de charger l'équipe."));
   };
 
-  useEffect(charger, []);
+  // Recharge la liste quand la boutique active change (sélecteur multi-points-
+  // de-vente) : le backend filtre desormais sur cette boutique uniquement.
+  useEffect(charger, [boutiqueActiveId]);
 
   const employesFiltres = (employes || []).filter((e) =>
     `${e.nom} ${e.prenom ?? ''}`.toLowerCase().includes(recherche.toLowerCase())

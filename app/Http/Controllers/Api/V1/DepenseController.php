@@ -7,14 +7,15 @@ use App\Http\Requests\StoreDepenseRequest;
 use App\Http\Requests\UpdateDepenseRequest;
 use App\Models\Depense;
 use App\Traits\JournaliseActivite;
+use App\Traits\ResolveBoutiqueActive;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use RuntimeException;
 
 class DepenseController extends Controller
 {
     use JournaliseActivite;
+    use ResolveBoutiqueActive;
 
     private function baseQuery(): \Illuminate\Database\Eloquent\Builder
     {
@@ -23,10 +24,8 @@ class DepenseController extends Controller
 
         if ($user->hasRole('super_admin')) {
             //
-        } elseif ($user->hasRole('gerant')) {
-            $query->whereIn('boutique_id', $user->boutiquesGerees()->pluck('id'));
         } else {
-            $query->where('boutique_id', $user->boutique_id);
+            $query->where('boutique_id', $this->boutiqueActive());
         }
 
         return $query;
@@ -91,13 +90,10 @@ class DepenseController extends Controller
         $this->authorize('create', Depense::class);
 
         $user = Auth::user();
+        $boutiqueId = $this->boutiqueActive();
 
-        try {
-            $boutiqueId = $user->boutique_id ?? $user->boutiquesGerees()->firstOr(function () {
-                throw new RuntimeException('Aucune boutique associée à ce compte.');
-            })->id;
-        } catch (RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+        if (! $boutiqueId) {
+            return response()->json(['message' => 'Aucune boutique associée à ce compte.'], 422);
         }
 
         $depense = Depense::create([

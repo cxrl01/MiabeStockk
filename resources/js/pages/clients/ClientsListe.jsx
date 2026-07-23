@@ -2,17 +2,22 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppShell from '../../components/layout/AppShell';
 import { useAuth } from '../../hooks/useAuth';
+import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
 import { lienRelanceWhatsapp } from '../../lib/whatsapp';
 
 export default function ClientsListe() {
   const { user } = useAuth();
+  const { boutiqueActiveId, boutiquesGerees } = useBoutiqueActive();
   const [clients, setClients] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
 
-  const boutiqueNom = user?.boutique?.nom || user?.boutiques_gerees?.[0]?.nom || 'notre boutique';
+  // Nom de la boutique ACTIVE (pas systematiquement la premiere boutique geree)
+  // pour personnaliser le message WhatsApp de relance.
+  const boutiqueActiveObjet = boutiquesGerees.find((b) => b.id === boutiqueActiveId);
+  const boutiqueNom = user?.boutique?.nom || boutiqueActiveObjet?.nom || 'notre boutique';
 
   const charger = () => {
     api.get('/clients', { params: { per_page: 100 } })
@@ -20,7 +25,8 @@ export default function ClientsListe() {
       .catch(() => setErreur("Impossible de charger les clients."));
   };
 
-  useEffect(charger, []);
+  // Recharge quand la boutique active change (sélecteur multi-points-de-vente).
+  useEffect(charger, [boutiqueActiveId]);
 
   const clientsFiltres = (clients || []).filter((c) =>
     c.nom.toLowerCase().includes(recherche.toLowerCase())

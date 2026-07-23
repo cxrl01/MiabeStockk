@@ -10,12 +10,13 @@ import { IconCart, IconWallet, IconUsers, IconAlertTriangle } from '../component
 /**
  * Ce fichier est aligne EXACTEMENT sur la reponse actuelle de DashboardController::index() :
  * ventes_jour, ca_jour, ca_mois, total_clients, depenses_mois, produits_en_alerte,
- * dernieres_ventes[], alertes_stock[].
+ * dernieres_ventes[], alertes_stock[], et comparatif_boutiques[] (uniquement present si
+ * le Gerant possede plusieurs boutiques — cf. memoire, "tableau de bord consolide").
  *
- * Consequence : pas de variation en % (le controleur ne les calcule pas encore), pas de
- * detail clients actifs/en alerte (seul total_clients existe), pas d'alertes de dettes
- * (seul alertes_stock existe, pas de fusion stock+dette). Des lors que le controleur sera
- * etendu, on pourra remettre ces elements (voir version precedente pour la cible maquette).
+ * Ce tableau de bord est TOUJOURS consolide (toutes les boutiques du Gerant), pas
+ * filtre par boutique active — contrairement aux ecrans operationnels (Stock, Ventes,
+ * Clients...). Pas de dependance sur boutiqueActiveId ici : changer de boutique dans
+ * le selecteur ne doit pas modifier ce que montre le Dashboard.
  */
 
 export default function Dashboard() {
@@ -70,6 +71,42 @@ export default function Dashboard() {
           tone="danger"
         />
       </div>
+
+      {/* Comparatif par boutique — uniquement pour un Gerant multi-points-de-vente */}
+      {d?.comparatif_boutiques?.length > 1 && (
+        <div className="bg-surface rounded-xl border border-ink900/10 overflow-x-auto mb-6">
+          <div className="px-5 py-4 border-b border-ink900/10">
+            <h2 className="font-display font-semibold text-ink900">Comparatif par boutique</h2>
+            <p className="text-xs text-ink900/40">Mois en cours, toutes vos boutiques</p>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-ink900/10 text-left text-ink900/40 text-xs uppercase tracking-wider">
+                <th className="px-5 py-3 font-medium">Boutique</th>
+                <th className="px-5 py-3 font-medium text-right">CA du mois</th>
+                <th className="px-5 py-3 font-medium text-right">Ventes</th>
+                <th className="px-5 py-3 font-medium text-right">Alertes stock</th>
+                <th className="px-5 py-3 font-medium text-right">Dettes clients</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.comparatif_boutiques.map((b) => (
+                <tr key={b.id} className="border-b border-ink900/5 last:border-0">
+                  <td className="px-5 py-3.5 text-ink900 font-medium">{b.nom}</td>
+                  <td className="px-5 py-3.5 text-right font-mono text-success">{formatMontant(b.ca_mois)}</td>
+                  <td className="px-5 py-3.5 text-right font-mono text-ink900/70">{b.ventes_mois}</td>
+                  <td className={`px-5 py-3.5 text-right font-mono ${b.produits_en_alerte > 0 ? 'text-danger font-semibold' : 'text-ink900/40'}`}>
+                    {b.produits_en_alerte}
+                  </td>
+                  <td className={`px-5 py-3.5 text-right font-mono ${Number(b.dettes_clients) > 0 ? 'text-danger' : 'text-ink900/40'}`}>
+                    {formatMontant(b.dettes_clients)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Dernieres ventes */}
