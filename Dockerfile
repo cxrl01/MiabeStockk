@@ -7,7 +7,7 @@ COPY . .
 RUN npm run build
 
 # Étape 2 : l'application PHP/Laravel
-FROM php:8.3-cli
+FROM php:8.4-cli
 
 # Outils système + extensions PHP nécessaires (pgsql, dompdf, excel, etc.)
 RUN apt-get update && apt-get install -y \
