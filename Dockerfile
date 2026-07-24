@@ -34,9 +34,9 @@ RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 # Permissions sur les dossiers d'écriture
 RUN chmod -R 777 storage bootstrap/cache
 
-# Configuration Nginx pointant vers le port 10000
+# Configuration Nginx pointant vers le port dynamique fourni par Render
 RUN echo 'server {\n\
-    listen 10000;\n\
+    listen ${PORT};\n\
     root /var/www/html/public;\n\
     index index.php;\n\
     charset utf-8;\n\
@@ -50,11 +50,13 @@ RUN echo 'server {\n\
     }\n\
 }' > /etc/nginx/sites-available/default
 
-# Exposition UNIQUEMENT du port 10000 (pour éviter que Render ne capte le port 9000 de FPM)
-EXPOSE 10000
+# Exposition du port dynamique
+EXPOSE ${PORT}
 
-# Lancement de PHP-FPM, des caches Laravel, des migrations, puis Nginx en premier plan
+# Lancement de PHP-FPM, nettoyage des caches Laravel, migrations, puis Nginx en premier plan
 CMD php-fpm -D && \
+    php artisan config:clear && \
+    php artisan route:clear && \
     php artisan config:cache && \
     php artisan route:cache && \
     php artisan migrate --force && \
