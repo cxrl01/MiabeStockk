@@ -28,4 +28,9 @@ RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD php artisan migrate --force && php artisan config:cache && php artisan serve --host 0.0.0.0 --port ${PORT:-10000}
+# On demarre le serveur EN PREMIER (le "&" le lance en arriere-plan) pour que
+# Render recoive une reponse tres vite sur /up. Les migrations se lancent
+# juste apres, sans bloquer le demarrage du serveur — indispensable sur le
+# plan gratuit de Render, qui n'offre pas de "Pre-Deploy Command" (reserve
+# aux plans payants) pour separer proprement ces deux etapes.
+CMD ["bash", "-c", "php artisan serve --host 0.0.0.0 --port ${PORT:-10000} & sleep 3; php artisan migrate --force --no-interaction && php artisan config:cache; wait"]
