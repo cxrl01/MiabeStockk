@@ -30,11 +30,10 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 # Permissions sur les dossiers d'écriture
 RUN chmod -R 777 storage bootstrap/cache
 
-# On expose le port 10000 (port par défaut exigé par Render)
+# Expose le port 10000 (standard Render)
 EXPOSE 10000
 
-# Commande de démarrage : Forcer l'écoute sur 0.0.0.0 et sur le port 10000
-CMD php artisan config:cache && \
-    php artisan route:cache && \
+# Commande de démarrage : Effacer le cache de config au cas où, puis migrer, puis lancer le serveur
+CMD php artisan config:clear && \
     php artisan migrate --force && \
     php artisan serve --host 0.0.0.0 --port ${PORT:-10000}
