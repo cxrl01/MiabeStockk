@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import {
   IconDashboard, IconCart, IconBox, IconUsers, IconTruck, IconChart,
   IconWallet, IconUser, IconGear, IconLogout,
@@ -7,6 +8,7 @@ import {
 
 export default function Sidebar({ collapsed, stockAlertesCount, ventesAlertesCount }) {
   const { user, logout } = useAuth();
+  const { boutiqueActiveId, boutiquesGerees, estGerantMulti } = useBoutiqueActive();
   const navigate = useNavigate();
 
   const role = user?.role?.nom;
@@ -14,7 +16,17 @@ export default function Sidebar({ collapsed, stockAlertesCount, ventesAlertesCou
   const estGestionnaire = role === 'gestionnaire';
   const estCommercial = role === 'commercial';
 
-  const boutiqueNom = user?.boutique?.nom || user?.boutiques_gerees?.[0]?.nom || 'Ma boutique';
+  /**
+   * Nom de boutique affiche en haut de la sidebar :
+   * - Gerant multi-boutiques : suit la boutique ACTIVE (meme source que le
+   *   selecteur du Topbar), pas systematiquement la premiere geree.
+   * - Gerant mono-boutique / staff : sa boutique unique, comme avant.
+   */
+  const boutiqueActive = estGerantMulti
+    ? boutiquesGerees?.find((b) => b.id === boutiqueActiveId)
+    : null;
+
+  const boutiqueNom = boutiqueActive?.nom || user?.boutique?.nom || user?.boutiques_gerees?.[0]?.nom || 'Ma boutique';
   const nomComplet = `${user?.prenom ?? ''} ${user?.nom ?? ''}`.trim() || 'Utilisateur';
   const initiales = `${user?.prenom?.charAt(0) ?? ''}${user?.nom?.charAt(0) ?? ''}`.toUpperCase() || 'U';
   const posteAffiche = user?.poste || (estGerant ? 'Gérant' : estGestionnaire ? 'Gestionnaire' : 'Commercial');
