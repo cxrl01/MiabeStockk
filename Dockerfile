@@ -25,6 +25,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN chmod -R 775 storage bootstrap/cache
 
 COPY start.sh /usr/local/bin/start.sh
+RUN sed -i 's/\r$//' /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 EXPOSE 10000
