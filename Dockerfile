@@ -1,4 +1,4 @@
-# Étape 1 : Build du Frontend React / Vite
+# Étape 1 : construire les fichiers React/Vite (JS/CSS compilés)
 FROM node:20-alpine AS frontend
 WORKDIR /app
 COPY package*.json ./
@@ -6,59 +6,34 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Étape 2 : Serveur de production PHP-FPM + Nginx
-FROM php:8.4-fpm
+# Étape 2 : l'application PHP/Laravel
+FROM php:8.3-cli
 
-# Installation des outils système + extensions PHP requis
+# Outils système + extensions PHP nécessaires (pgsql, dompdf, excel, etc.)
 RUN apt-get update && apt-get install -y \
-    nginx libpq-dev libzip-dev libpng-dev libonig-dev libxml2-dev unzip git \
+    libpq-dev libzip-dev libpng-dev libonig-dev libxml2-dev unzip git \
     && docker-php-ext-install pdo pdo_pgsql pgsql zip gd mbstring xml bcmath \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Installation de Composer
+# Installe Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copie et installation des dépendances PHP
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --no-scripts --prefer-dist --optimize-autoloader
-
-# Copie du code source + assets compilés de React
+# Copie du code source + assets compilés
 COPY . .
 COPY --from=frontend /app/public/build ./public/build
 
-# Optimisation de l'autoloader
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
+# Installation des dépendances PHP
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Permissions sur les dossiers d'écriture
-RUN chmod -R 777 storage bootstrap/cache
+RUN chmod -R 775 storage bootstrap/cache
 
-# Copie d'un template Nginx avec variable PORT
-RUN echo 'server {\n\
-    listen PORT_PLACEHOLDER;\n\
-    root /var/www/html/public;\n\
-    index index.php;\n\
-    charset utf-8;\n\
-    location / {\n\
-        try_files $uri $uri/ /index.php?$query_string;\n\
-    }\n\
-    location ~ \.php$ {\n\
-        fastcgi_pass 127.0.0.1:9000;\n\
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;\n\
-        include fastcgi_params;\n\
-    }\n\
-}' > /etc/nginx/sites-available/default.template
-
-# Exposition du port dynamique
+# Expose le port (Render injecte sa variable $PORT automatiquement)
 EXPOSE 8080
 
-# Script de démarrage : remplace PORT_PLACEHOLDER par la valeur de $PORT
-CMD php-fpm -D && \
-    sed "s/PORT_PLACEHOLDER/${PORT}/" /etc/nginx/sites-available/default.template > /etc/nginx/sites-enabled/default && \
-    php artisan config:clear && \
-    php artisan route:clear && \
+# Commande de démarrage
+CMD php artisan migrate --force && \
     php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan migrate --force && \
-    nginx -g "daemon off;"
+    php artisan serve --host 0.0.0.0 --port ${PORT:-8080}
