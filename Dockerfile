@@ -20,7 +20,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copie et installation des dépendances PHP (sans scripts artisan au build)
+# Copie et installation des dépendances PHP
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --no-scripts --prefer-dist --optimize-autoloader
 
@@ -34,9 +34,9 @@ RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 # Permissions sur les dossiers d'écriture
 RUN chmod -R 777 storage bootstrap/cache
 
-# Configuration Nginx pointant vers le port dynamique fourni par Render
+# Copie d'un template Nginx avec variable PORT
 RUN echo 'server {\n\
-    listen ${PORT};\n\
+    listen PORT_PLACEHOLDER;\n\
     root /var/www/html/public;\n\
     index index.php;\n\
     charset utf-8;\n\
@@ -48,13 +48,14 @@ RUN echo 'server {\n\
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;\n\
         include fastcgi_params;\n\
     }\n\
-}' > /etc/nginx/sites-available/default
+}' > /etc/nginx/sites-available/default.template
 
 # Exposition du port dynamique
-EXPOSE ${PORT}
+EXPOSE 8080
 
-# Lancement de PHP-FPM, nettoyage des caches Laravel, migrations, puis Nginx en premier plan
+# Script de démarrage : remplace PORT_PLACEHOLDER par la valeur de $PORT
 CMD php-fpm -D && \
+    sed "s/PORT_PLACEHOLDER/${PORT}/" /etc/nginx/sites-available/default.template > /etc/nginx/sites-enabled/default && \
     php artisan config:clear && \
     php artisan route:clear && \
     php artisan config:cache && \
