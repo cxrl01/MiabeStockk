@@ -7,6 +7,7 @@ use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\ResetPasswordRequest;
+use App\Mail\BienvenueGerant;
 use App\Models\Boutique;
 use App\Models\Role;
 use App\Models\User;
@@ -17,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
@@ -41,6 +43,7 @@ class AuthController extends Controller
                 'email' => $request->validated('email'),
                 'telephone' => $request->validated('telephone'),
                 'password' => Hash::make($request->validated('password')),
+                'multi_points_vente' => $request->validated('multi_points_vente'),
             ]);
 
             Boutique::create([
@@ -56,6 +59,15 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         $this->journaliser('auth.inscription', $user);
+
+        // Email de bienvenue : protege par try/catch pour qu'une panne SMTP
+        // ne fasse pas echouer l'inscription elle-meme (le compte et la
+        // boutique sont deja crees a ce stade, l'email n'est qu'un bonus).
+        try {
+            Mail::to($user->email)->send(new BienvenueGerant($user));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json([
             'user' => $user->load('role', 'boutique', 'boutiquesGerees'),
