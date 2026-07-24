@@ -34,6 +34,7 @@ RUN chmod -R 777 storage bootstrap/cache
 EXPOSE 10000
 
 # Commande de démarrage : Effacer le cache de config au cas où, puis migrer, puis lancer le serveur
-CMD php artisan config:clear && \
+CMD php artisan config:cache && \
+    php artisan route:cache && \
     php artisan migrate --force && \
-    php artisan serve --host 0.0.0.0 --port ${PORT:-10000}
+    PHP_CLI_SERVER_WORKERS=4 php artisan serve --host 0.0.0.0 --port ${PORT:-10000}
