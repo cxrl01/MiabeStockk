@@ -24,8 +24,21 @@ COPY --from=frontend /app/public/build ./public/build
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-RUN chmod -R 775 storage bootstrap/cache
+# Création explicite des dossiers requis (évite l'erreur "Please provide a valid cache path")
+RUN mkdir -p \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache/data \
+    storage/framework/testing \
+    storage/app/public \
+    storage/logs \
+    bootstrap/cache \
+    && chmod -R 777 storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD php artisan migrate --force && php artisan config:cache && php artisan serve --host 0.0.0.0 --port ${PORT:-10000}
+# Démarrage avec cache des configurations, routes, migrations et multi-workers
+CMD php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan migrate --force && \
+    PHP_CLI_SERVER_WORKERS=4 php artisan serve --host 0.0.0.0 --port ${PORT:-10000} --no-reload
