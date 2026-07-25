@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
+        // Indique à Laravel de faire confiance au reverse-proxy SSL de Render
+        $middleware->trustProxies(at: '*');
+        
         $middleware->statefulApi();
 
         // Application 100% API/SPA : aucune route "login" Blade n'existe. Sans ceci,
