@@ -37,8 +37,8 @@ RUN mkdir -p \
 
 EXPOSE 10000
 
-# Démarrage avec cache des configurations, routes, migrations et multi-workers
+# Démarrage avec cache, migrations + SEEDER, et multi-workers
 CMD php artisan config:cache && \
     php artisan route:cache && \
-    php artisan migrate --force && \
+    php artisan migrate --force --seed && \
     PHP_CLI_SERVER_WORKERS=4 php artisan serve --host 0.0.0.0 --port ${PORT:-10000} --no-reload
