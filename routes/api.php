@@ -18,6 +18,22 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\ClientController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/v1/debug-session', function (\Illuminate\Http\Request $request) {
+    return response()->json([
+        'cookie_recu_brut' => $request->cookie(config('session.cookie')),
+        'session_id_actuel' => $request->session()->getId(),
+        'session_driver' => config('session.driver'),
+        'session_cookie_name' => config('session.cookie'),
+        'session_domain' => config('session.domain'),
+        'session_same_site' => config('session.same_site'),
+        'session_secure' => config('session.secure'),
+        'auth_check' => \Illuminate\Support\Facades\Auth::check(),
+        'auth_id' => \Illuminate\Support\Facades\Auth::id(),
+        'session_all' => $request->session()->all(),
+        'app_key_hash' => md5(config('app.key')), // juste pour comparer, jamais la vraie clé
+    ]);
+});
+
 Route::prefix('v1')->group(function () {
 
     // --- Authentification (publique) ---
