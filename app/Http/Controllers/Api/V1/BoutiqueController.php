@@ -62,22 +62,25 @@ class BoutiqueController extends Controller
     }
 
     /**
-     * Fiche detail d'une boutique (utilisee par AdminBoutiqueDetail.jsx) :
-     * gerant charge (avec email), effectif et CA cumule calcules — sans quoi
-     * la page affiche gerant/staff_count/ca_total vides par defaut.
-     */
-    public function show(Boutique $boutique): JsonResponse
-    {
-        $this->authorize('view', $boutique);
+ * Fiche detail d'une boutique (utilisee par AdminBoutiqueDetail.jsx) :
+ * gerant charge (avec email), EQUIPE complete (nom/prenom/email/role) au
+ * lieu d'un simple comptage, et CA cumule calcule.
+ */
+public function show(Boutique $boutique): JsonResponse
+{
+    $this->authorize('view', $boutique);
 
-        $boutique->load('gerant:id,nom,prenom,email')
-            ->loadCount('staff')
-            ->loadSum(['commandes as ca_total' => function ($query) {
-                $query->where('type', 'vente')->where('statut', 'validee');
-            }], 'montant_ttc');
+    $boutique->load([
+            'gerant:id,nom,prenom,email',
+            'staff:id,nom,prenom,email,boutique_id,role_id',
+            'staff.role:id,nom,libelle',
+        ])
+        ->loadSum(['commandes as ca_total' => function ($query) {
+            $query->where('type', 'vente')->where('statut', 'validee');
+        }], 'montant_ttc');
 
-        return response()->json($boutique);
-    }
+    return response()->json($boutique);
+}
 
     public function update(UpdateBoutiqueRequest $request, Boutique $boutique): JsonResponse
     {

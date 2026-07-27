@@ -5,6 +5,11 @@ import { IconBox, IconUser, IconWallet, IconUsers } from '../../components/layou
 import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
 
+const LABELS_ROLE = {
+  gestionnaire: 'Gestionnaire',
+  commercial: 'Commercial',
+};
+
 function ChampLecture({ label, valeur }) {
   return (
     <div>
@@ -25,6 +30,8 @@ export default function AdminBoutiqueDetail() {
       .then(({ data }) => setBoutique(data))
       .catch(() => setErreur("Impossible de charger cette boutique."));
   }, [id]);
+
+  const equipe = boutique?.staff ?? [];
 
   return (
     <AppShell title={boutique?.nom || 'Boutique'}>
@@ -80,15 +87,39 @@ export default function AdminBoutiqueDetail() {
             )}
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="bg-surface rounded-2xl border border-ink900/10 p-6">
-              <p className="text-xs font-medium text-ink900/50 mb-2 flex items-center gap-2"><IconUsers /> Utilisateurs</p>
-              <p className="font-mono text-2xl font-semibold text-ink900">{boutique.staff_count ?? 0}</p>
-            </div>
-            <div className="bg-surface rounded-2xl border border-ink900/10 p-6">
-              <p className="text-xs font-medium text-ink900/50 mb-2 flex items-center gap-2"><IconWallet /> Chiffre d'affaires</p>
-              <p className="font-mono text-2xl font-semibold text-ink900">{formatMontant(boutique.ca_total ?? 0)}</p>
-            </div>
+          <div className="bg-surface rounded-2xl border border-ink900/10 p-6">
+            <h2 className="font-display font-semibold text-ink900 mb-4 flex items-center gap-2">
+              <IconUsers /> Équipe ({equipe.length})
+            </h2>
+            {equipe.length > 0 ? (
+              <div className="divide-y divide-ink900/5">
+                {equipe.map((membre) => (
+                  <div key={membre.id} className="flex items-center justify-between py-3 gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="h-9 w-9 shrink-0 rounded-full bg-indigo-700/10 text-indigo-700 text-sm font-medium flex items-center justify-center">
+                        {membre.nom.charAt(0).toUpperCase()}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-ink900 truncate">
+                          {membre.nom} {membre.prenom}
+                        </p>
+                        <p className="text-xs text-ink900/40 truncate">{membre.email}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-ink900/60 bg-ink900/5 rounded-full px-2.5 py-1 shrink-0">
+                      {LABELS_ROLE[membre.role?.nom] ?? membre.role?.libelle ?? '—'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-ink900/40">Aucun membre d'équipe pour cette boutique.</p>
+            )}
+          </div>
+
+          <div className="bg-surface rounded-2xl border border-ink900/10 p-6">
+            <p className="text-xs font-medium text-ink900/50 mb-2 flex items-center gap-2"><IconWallet /> Chiffre d'affaires</p>
+            <p className="font-mono text-2xl font-semibold text-ink900">{formatMontant(boutique.ca_total ?? 0)}</p>
           </div>
         </div>
       )}
