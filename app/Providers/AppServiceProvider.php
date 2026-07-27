@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Mail\Transport\BrevoTransport;
 use App\Models\Categorie;
 use App\Models\Client;
 use App\Models\Commande;
@@ -15,6 +16,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
 use App\Policies\EquipePolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,6 +28,13 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Enregistre le transport custom pour envoyer les emails via
+        // l'API HTTP de Brevo (contourne le blocage des ports SMTP
+        // sortants sur le plan gratuit Render).
+        Mail::extend('brevo', function (array $config = []) {
+            return new BrevoTransport(config('services.brevo.key'));
+        });
+
         // Commande sert vente + livraison ; VentePolicy couvre les deux car
         // les règles d'autorisation (boutique + rôle) sont les mêmes.
         Gate::policy(Commande::class, VentePolicy::class);
