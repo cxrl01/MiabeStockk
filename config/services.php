@@ -39,4 +39,6 @@ return [
     'key' => env('BREVO_API_KEY'),
     ],
 
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+
 ];

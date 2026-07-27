@@ -45,17 +45,20 @@ class AppServiceProvider extends ServiceProvider
 
         // Le lien de réinitialisation doit pointer vers la SPA React
         // (pas de route Blade "password.reset" dans cette architecture).
-        ResetPassword::createUrlUsing(function ($user, string $token) {
-            return config('app.url')
-                . '/reinitialiser-mot-de-passe?token=' . $token
-                . '&email=' . urlencode($user->email);
-        });
+        //
+        // IMPORTANT : quand toMailUsing() est défini (ci-dessous), Laravel
+        // n'appelle JAMAIS createUrlUsing() en interne — le callback
+        // toMailUsing reçoit directement le TOKEN BRUT (pas une URL toute
+        // construite). On construit donc l'URL nous-mêmes ici, dans
+        // toMailUsing, plutôt que de définir createUrlUsing séparément
+        // (qui serait mort, jamais exécuté).
+        ResetPassword::toMailUsing(function ($notifiable, string $token) {
+            $baseUrl = rtrim(config('services.frontend_url'), '/');
 
-        // Contenu du mail en français, cohérent avec le reste de l'appli
-        // (au lieu du texte anglais par défaut de Laravel). Hérite
-        // automatiquement du thème MiabéStock déjà personnalisé
-        // (resources/views/vendor/mail/html/themes/default.css).
-        ResetPassword::toMailUsing(function ($notifiable, string $url) {
+            $url = $baseUrl
+                . '/reinitialiser-mot-de-passe?token=' . $token
+                . '&email=' . urlencode($notifiable->email);
+
             return (new MailMessage)
                 ->subject('Réinitialisation de votre mot de passe — MiabéStock')
                 ->greeting('Bonjour ' . $notifiable->prenom . ',')
@@ -64,7 +67,5 @@ class AppServiceProvider extends ServiceProvider
                 ->line('Ce lien expirera dans 60 minutes.')
                 ->line('Si vous n\'êtes pas à l\'origine de cette demande, aucune action n\'est requise.');
         });
-
-
     }
 }
