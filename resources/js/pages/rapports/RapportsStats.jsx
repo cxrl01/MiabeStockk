@@ -5,6 +5,29 @@ import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
 
 const NOMS_MOIS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+const ANNEE_COURANTE = new Date().getFullYear();
+const ANNEES = Array.from({ length: 5 }, (_, i) => ANNEE_COURANTE - i);
+
+function filtresParDefaut() {
+  const maintenant = new Date();
+  return {
+    type: 'mois',
+    mois: maintenant.getMonth() + 1,
+    annee: ANNEE_COURANTE,
+    debut: '',
+    fin: '',
+  };
+}
+
+function versParams(filtres) {
+  if (filtres.type === 'annee') {
+    return { type: 'annee', annee: filtres.annee };
+  }
+  if (filtres.type === 'periode') {
+    return { type: 'periode', debut: filtres.debut, fin: filtres.fin };
+  }
+  return { type: 'mois', mois: filtres.mois, annee: filtres.annee };
+}
 
 export default function RapportsStats() {
   const { user } = useAuth();
@@ -13,26 +36,40 @@ export default function RapportsStats() {
   const [erreur, setErreur] = useState('');
   const [exportEnCours, setExportEnCours] = useState(false);
 
-  // Tableau 6 du mémoire : "Générer rapports et statistiques" / "Exporter
-  // rapport PDF" = Gérant uniquement.
+  const [filtres, setFiltres] = useState(filtresParDefaut());
+  const [filtresAppliques, setFiltresAppliques] = useState(filtresParDefaut());
+
   const estGerant = user?.role?.nom === 'gerant';
 
   useEffect(() => {
     if (!estGerant) return;
 
-    api.get('/rapports/statistiques')
+    const params = versParams(filtresAppliques);
+
+    api.get('/rapports/statistiques', { params })
       .then(({ data }) => setStats(data))
       .catch(() => setErreur('Impossible de charger les statistiques.'));
 
-    api.get('/rapports/resultat-net')
+    api.get('/rapports/resultat-net', { params })
       .then(({ data }) => setResultat(data))
       .catch(() => {});
-  }, [estGerant]);
+  }, [estGerant, filtresAppliques]);
+
+  const appliquerFiltres = (e) => {
+    e.preventDefault();
+    if (filtres.type === 'periode' && (!filtres.debut || !filtres.fin)) {
+      setErreur('Sélectionne une date de début et de fin.');
+      return;
+    }
+    setErreur('');
+    setFiltresAppliques(filtres);
+  };
 
   const exporterPdf = async () => {
     setExportEnCours(true);
     try {
-      const { data } = await api.get('/rapports/export-pdf', { responseType: 'blob' });
+      const params = versParams(filtresAppliques);
+      const { data } = await api.get('/rapports/export-pdf', { params, responseType: 'blob' });
       const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
       window.open(url, '_blank');
     } catch (error) {
@@ -54,6 +91,7 @@ export default function RapportsStats() {
 
   const maxCa = Math.max(1, ...(stats?.ca_mensuel?.map((m) => m.total) ?? [1]));
   const maxVentes = Math.max(1, ...(stats?.ventes_mensuel?.map((m) => m.nombre) ?? [1]));
+  const anneeGraphique = stats?.periode?.debut ? new Date(stats.periode.debut).getFullYear() : ANNEE_COURANTE;
 
   return (
     <AppShell title="Rapports & Stats">
@@ -61,41 +99,126 @@ export default function RapportsStats() {
         <p className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3 mb-6">{erreur}</p>
       )}
 
-      <div className="flex justify-end mb-4">
-        <button
-          type="button"
-          onClick={exporterPdf}
-          disabled={exportEnCours}
-          className="inline-flex items-center justify-center rounded-lg border border-indigo-700 text-indigo-700
-            text-sm font-medium px-4 py-2.5 hover:bg-indigo-700/5 disabled:opacity-50"
-        >
-          {exportEnCours ? 'Génération…' : 'Exporter en PDF'}
-        </button>
-      </div>
+      <form onSubmit={appliquerFiltres} className="bg-surface rounded-xl border border-ink900/10 p-4 mb-6">
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs text-ink900/50 mb-1">Filtrer par</label>
+            <select
+              value={filtres.type}
+              onChange={(e) => setFiltres((f) => ({ ...f, type: e.target.value }))}
+              className="rounded-lg border border-ink900/15 text-sm px-3 py-2"
+            >
+              <option value="mois">Mois</option>
+              <option value="annee">Année</option>
+              <option value="periode">Période personnalisée</option>
+            </select>
+          </div>
+
+          {filtres.type === 'mois' && (
+            <>
+              <div>
+                <label className="block text-xs text-ink900/50 mb-1">Mois</label>
+                <select
+                  value={filtres.mois}
+                  onChange={(e) => setFiltres((f) => ({ ...f, mois: Number(e.target.value) }))}
+                  className="rounded-lg border border-ink900/15 text-sm px-3 py-2"
+                >
+                  {NOMS_MOIS.map((nom, i) => (
+                    <option key={nom} value={i + 1}>{nom}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-ink900/50 mb-1">Année</label>
+                <select
+                  value={filtres.annee}
+                  onChange={(e) => setFiltres((f) => ({ ...f, annee: Number(e.target.value) }))}
+                  className="rounded-lg border border-ink900/15 text-sm px-3 py-2"
+                >
+                  {ANNEES.map((a) => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+
+          {filtres.type === 'annee' && (
+            <div>
+              <label className="block text-xs text-ink900/50 mb-1">Année</label>
+              <select
+                value={filtres.annee}
+                onChange={(e) => setFiltres((f) => ({ ...f, annee: Number(e.target.value) }))}
+                className="rounded-lg border border-ink900/15 text-sm px-3 py-2"
+              >
+                {ANNEES.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+          )}
+
+          {filtres.type === 'periode' && (
+            <>
+              <div>
+                <label className="block text-xs text-ink900/50 mb-1">Du</label>
+                <input
+                  type="date"
+                  value={filtres.debut}
+                  onChange={(e) => setFiltres((f) => ({ ...f, debut: e.target.value }))}
+                  className="rounded-lg border border-ink900/15 text-sm px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-ink900/50 mb-1">Au</label>
+                <input
+                  type="date"
+                  value={filtres.fin}
+                  onChange={(e) => setFiltres((f) => ({ ...f, fin: e.target.value }))}
+                  className="rounded-lg border border-ink900/15 text-sm px-3 py-2"
+                />
+              </div>
+            </>
+          )}
+
+          <button
+            type="submit"
+            className="rounded-lg bg-indigo-700 text-white text-sm font-medium px-4 py-2.5 hover:bg-indigo-800"
+          >
+            Appliquer
+          </button>
+
+          <button
+            type="button"
+            onClick={exporterPdf}
+            disabled={exportEnCours}
+            className="ml-auto inline-flex items-center justify-center rounded-lg border border-indigo-700 text-indigo-700
+              text-sm font-medium px-4 py-2.5 hover:bg-indigo-700/5 disabled:opacity-50"
+          >
+            {exportEnCours ? 'Génération…' : 'Exporter en PDF'}
+          </button>
+        </div>
+      </form>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">CA ce mois</p>
-          <p className="font-mono text-xl font-semibold text-ink900">{stats ? formatMontant(stats.ca_mois) : '—'}</p>
+          <p className="text-sm text-ink900/50 mb-2">CA sur la période</p>
+          <p className="font-mono text-xl font-semibold text-ink900">{stats ? formatMontant(stats.ca_periode) : '—'}</p>
         </div>
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Ventes totales (année)</p>
-          <p className="font-mono text-xl font-semibold text-ink900">{stats?.ventes_totales_annee ?? '—'}</p>
+          <p className="text-sm text-ink900/50 mb-2">Ventes (période)</p>
+          <p className="font-mono text-xl font-semibold text-ink900">{stats?.ventes_periode ?? '—'}</p>
         </div>
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Nouveaux clients (mois)</p>
-          <p className="font-mono text-xl font-semibold text-ink900">{stats?.nouveaux_clients_mois ?? '—'}</p>
+          <p className="text-sm text-ink900/50 mb-2">Nouveaux clients (période)</p>
+          <p className="font-mono text-xl font-semibold text-ink900">{stats?.nouveaux_clients_periode ?? '—'}</p>
         </div>
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Produits vendus (mois)</p>
-          <p className="font-mono text-xl font-semibold text-ink900">{stats?.produits_vendus_mois ?? '—'}</p>
+          <p className="text-sm text-ink900/50 mb-2">Produits vendus (période)</p>
+          <p className="font-mono text-xl font-semibold text-ink900">{stats?.produits_vendus_periode ?? '—'}</p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
           <h2 className="font-display font-semibold text-ink900 mb-1">Chiffre d'affaires mensuel</h2>
-          <p className="text-xs text-ink900/40 mb-4">Depuis janvier {new Date().getFullYear()}</p>
+          <p className="text-xs text-ink900/40 mb-4">Depuis janvier {anneeGraphique}</p>
           <div className="flex gap-2 h-40">
             {(stats?.ca_mensuel ?? []).map((m) => (
               <div key={m.mois} className="flex-1 flex flex-col justify-end items-center gap-1 h-full">
@@ -112,7 +235,7 @@ export default function RapportsStats() {
 
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
           <h2 className="font-display font-semibold text-ink900 mb-1">Nombre de ventes</h2>
-          <p className="text-xs text-ink900/40 mb-4">Depuis janvier {new Date().getFullYear()}</p>
+          <p className="text-xs text-ink900/40 mb-4">Depuis janvier {anneeGraphique}</p>
           <div className="flex gap-2 h-40">
             {(stats?.ventes_mensuel ?? []).map((m) => (
               <div key={m.mois} className="flex-1 flex flex-col justify-end items-center gap-1 h-full">
@@ -149,7 +272,7 @@ export default function RapportsStats() {
         </div>
 
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <h2 className="font-display font-semibold text-ink900 mb-4">Résultat net (mois en cours)</h2>
+          <h2 className="font-display font-semibold text-ink900 mb-4">Résultat net (période sélectionnée)</h2>
           {resultat ? (
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-ink900/60">

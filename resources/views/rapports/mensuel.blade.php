@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Rapport mensuel</title>
+    <title>Rapport</title>
     <style>
         @page { margin: 30px 40px; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1a1a1a; }
@@ -31,32 +31,37 @@
 </head>
 <body>
 
+    @php
+        $debutPeriode = \Carbon\Carbon::parse($statistiques['periode']['debut']);
+        $finPeriode = \Carbon\Carbon::parse($statistiques['periode']['fin']);
+    @endphp
+
     <div class="header">
         <div class="boutique-nom">{{ $boutique->nom ?? 'MiabéStock' }}</div>
-        <div>Rapport mensuel — {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</div>
+        <div>Rapport — du {{ $debutPeriode->format('d/m/Y') }} au {{ $finPeriode->format('d/m/Y') }}</div>
     </div>
 
     <div class="titre">Indicateurs clés</div>
     <table class="stats">
         <tr>
-            <td class="label">Chiffre d'affaires du mois</td>
-            <td class="valeur">{{ number_format($statistiques['ca_mois'], 0, ',', ' ') }} F</td>
+            <td class="label">Chiffre d'affaires sur la période</td>
+            <td class="valeur">{{ number_format($statistiques['ca_periode'], 0, ',', ' ') }} F</td>
         </tr>
         <tr>
-            <td class="label">Ventes totales (année en cours)</td>
-            <td class="valeur">{{ $statistiques['ventes_totales_annee'] }}</td>
+            <td class="label">Ventes sur la période</td>
+            <td class="valeur">{{ $statistiques['ventes_periode'] }}</td>
         </tr>
         <tr>
-            <td class="label">Nouveaux clients ce mois</td>
-            <td class="valeur">{{ $statistiques['nouveaux_clients_mois'] }}</td>
+            <td class="label">Nouveaux clients sur la période</td>
+            <td class="valeur">{{ $statistiques['nouveaux_clients_periode'] }}</td>
         </tr>
         <tr>
-            <td class="label">Produits vendus ce mois</td>
-            <td class="valeur">{{ $statistiques['produits_vendus_mois'] }}</td>
+            <td class="label">Produits vendus sur la période</td>
+            <td class="valeur">{{ $statistiques['produits_vendus_periode'] }}</td>
         </tr>
     </table>
 
-    <div class="titre">Top 5 produits (année en cours)</div>
+    <div class="titre">Top 5 produits (sur la période)</div>
     <table class="produits">
         <thead>
             <tr>

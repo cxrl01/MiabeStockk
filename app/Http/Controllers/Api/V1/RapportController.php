@@ -15,12 +15,6 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class RapportController extends Controller
 {
-    /**
-     * Tableau 6 du memoire : "Generer rapports et statistiques" et "Exporter
-     * rapport PDF" n'apparaissent QUE dans la liste du Gerant. Pas de Policy
-     * dediee (Rapport n'est pas un modele Eloquent) : verification directe du
-     * role, comme le fait deja EquipePolicy pour la meme raison de portee.
-     */
     private function autoriserGerantSeul(): void
     {
         if (! Auth::user()->hasRole('gerant')) {
@@ -34,32 +28,69 @@ class RapportController extends Controller
     }
 
     /**
-     * Donnees agregees pour l'ecran Rapports & Stats : CA du mois, ventes
-     * totales, nouveaux clients, produits vendus, CA mensuel (annee en cours),
-     * nombre de ventes mensuel, top 5 produits.
+     * Résout la période à analyser à partir des paramètres de filtre :
+     * - type=mois    -> mois + annee (defaut : mois/annee en cours)
+     * - type=annee   -> annee entiere
+     * - type=periode -> debut + fin (dates libres)
+     * Retourne [Carbon $debut, Carbon $fin, string $type].
      */
+    private function resoudrePeriode(Request $request): array
+    {
+        $type = $request->input('type', 'mois');
+
+        if ($type === 'annee') {
+            $annee = (int) $request->input('annee', now()->year);
+            $debut = now()->setDate($annee, 1, 1)->startOfDay();
+            $fin = now()->setDate($annee, 12, 31)->endOfDay();
+        } elseif ($type === 'periode') {
+            $debut = $request->filled('debut') ? $request->date('debut')->startOfDay() : now()->startOfMonth();
+            $fin = $request->filled('fin') ? $request->date('fin')->endOfDay() : now()->endOfMonth();
+        } else {
+            $type = 'mois';
+            $annee = (int) $request->input('annee', now()->year);
+            $mois = (int) $request->input('mois', now()->month);
+            $debut = now()->setDate($annee, $mois, 1)->startOfMonth();
+            $fin = (clone $debut)->endOfMonth();
+        }
+
+        return [$debut, $fin, $type];
+    }
+
     public function statistiques(Request $request): JsonResponse
     {
         $this->autoriserGerantSeul();
 
         $boutiqueIds = $this->boutiqueIds();
-        $debutAnnee = now()->startOfYear();
+        [$debut, $fin, $type] = $this->resoudrePeriode($request);
 
-        $ventesAnnee = Commande::query()
+        $ventesPeriode = Commande::query()
             ->where('type', 'vente')
             ->where('statut', 'validee')
             ->whereIn('boutique_id', $boutiqueIds)
-            ->where('created_at', '>=', $debutAnnee)
+            ->whereBetween('created_at', [$debut, $fin])
             ->get(['id', 'montant_ttc', 'created_at']);
 
-        $ventesMois = $ventesAnnee->filter(fn ($v) => $v->created_at->isSameMonth(now()));
+        // Graphiques mensuels : toujours affichés sur l'année du début de la
+        // période sélectionnée (Janvier -> mois en cours si année courante,
+        // sinon Janvier -> Décembre ou mois de fin selon le cas).
+        $anneeGraphique = $debut->year;
+        if ($anneeGraphique === now()->year) {
+            $dernierMois = now()->month;
+        } else {
+            $dernierMois = $fin->year === $anneeGraphique ? $fin->month : 12;
+        }
 
-        // CA + nombre de ventes par mois (Janvier -> mois en cours), pour les
-        // graphiques (meme logique que la maquette "Jan - Jul 2026").
+        $ventesAnneeGraphique = Commande::query()
+            ->where('type', 'vente')
+            ->where('statut', 'validee')
+            ->whereIn('boutique_id', $boutiqueIds)
+            ->whereYear('created_at', $anneeGraphique)
+            ->get(['id', 'montant_ttc', 'created_at']);
+
         $caMensuel = [];
         $ventesMensuel = [];
-        for ($mois = 1; $mois <= now()->month; $mois++) {
-            $ventesDuMois = $ventesAnnee->filter(fn ($v) => (int) $v->created_at->format('n') === $mois);
+        for ($mois = 1; $mois <= $dernierMois; $mois++) {
+            $ventesDuMois = $ventesAnneeGraphique->filter(fn ($v) => (int) $v->created_at->format('n') === $mois);
             $caMensuel[] = ['mois' => $mois, 'total' => (float) $ventesDuMois->sum('montant_ttc')];
             $ventesMensuel[] = ['mois' => $mois, 'nombre' => $ventesDuMois->count()];
         }
@@ -70,7 +101,7 @@ class RapportController extends Controller
             ->where('commandes.type', 'vente')
             ->where('commandes.statut', 'validee')
             ->whereIn('commandes.boutique_id', $boutiqueIds)
-            ->where('commandes.created_at', '>=', $debutAnnee)
+            ->whereBetween('commandes.created_at', [$debut, $fin])
             ->groupBy('produits.id', 'produits.nom')
             ->orderByDesc(DB::raw('SUM(ligne_commandes.quantite)'))
             ->limit(5)
@@ -78,20 +109,19 @@ class RapportController extends Controller
             ->get();
 
         return response()->json([
-            'ca_mois' => (float) $ventesMois->sum('montant_ttc'),
-            'ventes_totales_annee' => $ventesAnnee->count(),
-            'nouveaux_clients_mois' => \App\Models\Client::query()
+            'periode' => ['type' => $type, 'debut' => $debut->toDateString(), 'fin' => $fin->toDateString()],
+            'ca_periode' => (float) $ventesPeriode->sum('montant_ttc'),
+            'ventes_periode' => $ventesPeriode->count(),
+            'nouveaux_clients_periode' => \App\Models\Client::query()
                 ->whereIn('boutique_id', $boutiqueIds)
-                ->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
+                ->whereBetween('created_at', [$debut, $fin])
                 ->count(),
-            'produits_vendus_mois' => (int) DB::table('ligne_commandes')
+            'produits_vendus_periode' => (int) DB::table('ligne_commandes')
                 ->join('commandes', 'commandes.id', '=', 'ligne_commandes.commande_id')
                 ->where('commandes.type', 'vente')
                 ->where('commandes.statut', 'validee')
                 ->whereIn('commandes.boutique_id', $boutiqueIds)
-                ->whereMonth('commandes.created_at', now()->month)
-                ->whereYear('commandes.created_at', now()->year)
+                ->whereBetween('commandes.created_at', [$debut, $fin])
                 ->sum('ligne_commandes.quantite'),
             'ca_mensuel' => $caMensuel,
             'ventes_mensuel' => $ventesMensuel,
@@ -99,17 +129,12 @@ class RapportController extends Controller
         ]);
     }
 
-    /**
-     * "Resultat net" (glossaire du memoire) = CA - cout des livraisons - depenses,
-     * sur une periode donnee (mois en cours par defaut).
-     */
     public function resultatNet(Request $request): JsonResponse
     {
         $this->autoriserGerantSeul();
 
         $boutiqueIds = $this->boutiqueIds();
-        $debut = $request->filled('debut') ? $request->date('debut') : now()->startOfMonth();
-        $fin = $request->filled('fin') ? $request->date('fin') : now()->endOfMonth();
+        [$debut, $fin] = $this->resoudrePeriode($request);
 
         $ca = (float) Commande::query()
             ->where('type', 'vente')->where('statut', 'validee')
@@ -137,14 +162,10 @@ class RapportController extends Controller
         ]);
     }
 
-    /**
-     * Export PDF du rapport (Tableau 6 : "Exporter rapport PDF", Gerant seul).
-     */
     public function exportPdf(Request $request)
     {
         $this->autoriserGerantSeul();
 
-        $user = Auth::user();
         $boutique = Boutique::whereIn('id', $this->boutiqueIds())->first();
 
         $statistiques = json_decode($this->statistiques($request)->getContent(), true);
