@@ -11,6 +11,7 @@ import NouvelleVente from '../pages/ventes/NouvelleVente';
 import VenteDetail from '../pages/ventes/VenteDetail';
 import ProduitsListe from '../pages/stock/ProduitsListe';
 import ProduitForm from '../pages/stock/ProduitForm';
+import CategoriesListe from '../pages/categories/CategoriesListe';
 import ClientsListe from '../pages/clients/ClientsListe';
 import ClientForm from '../pages/clients/ClientForm';
 import ClientDetail from '../pages/clients/ClientDetail';
@@ -67,6 +68,15 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute rolesAutorises={['gerant', 'gestionnaire']}>
             <ProduitForm />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/categories"
+        element={
+          <ProtectedRoute rolesAutorises={['gerant', 'gestionnaire']}>
+            <CategoriesListe />
           </ProtectedRoute>
         }
       />

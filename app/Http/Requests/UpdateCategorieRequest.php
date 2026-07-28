@@ -2,11 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Traits\ResolveBoutiqueActive;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UpdateCategorieRequest extends FormRequest
 {
+    use ResolveBoutiqueActive;
+
     public function authorize(): bool
     {
         return Auth::check();
@@ -18,8 +22,12 @@ class UpdateCategorieRequest extends FormRequest
 
         return [
             'nom' => [
-                'required', 'string', 'max:255',
-                'unique:categories,nom,'.$categorie->id.',id,boutique_id,'.$categorie->boutique_id,
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('categories', 'nom')
+                    ->where('boutique_id', $this->boutiqueActive())
+                    ->ignore($categorie->id),
             ],
         ];
     }

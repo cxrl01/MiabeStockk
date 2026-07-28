@@ -29,6 +29,79 @@ function versParams(filtres) {
   return { type: 'mois', mois: filtres.mois, annee: filtres.annee };
 }
 
+// Libellés d'axe : ajoute l'année en suffixe si les données couvrent plusieurs années
+// (ex. periode personnalisée juin 2025 -> mars 2026), sinon juste le mois.
+function libellesMois(data) {
+  const anneesDistinctes = new Set(data.map((d) => d.annee));
+  return data.map((d) =>
+    anneesDistinctes.size > 1
+      ? `${NOMS_MOIS[d.mois - 1]} '${String(d.annee).slice(2)}`
+      : NOMS_MOIS[d.mois - 1]
+  );
+}
+
+// Génère un chemin SVG en courbe lissée (Catmull-Rom -> Bézier) à partir de points {x, y}
+function genererCourbeLissee(points) {
+  if (points.length < 2) return '';
+  const d = [`M ${points[0].x} ${points[0].y}`];
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] || points[i];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] || p2;
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d.push(`C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`);
+  }
+  return d.join(' ');
+}
+
+function GraphiqueCourbe({ valeurs, labels, couleur, formatValeur, hauteur = 180 }) {
+  const largeur = 600;
+  const padding = 24;
+  const paddingBas = 28;
+
+  if (!valeurs.length) {
+    return (
+      <div className="flex items-center justify-center text-sm text-ink900/40" style={{ height: hauteur }}>
+        Aucune donnée sur la période.
+      </div>
+    );
+  }
+
+  const max = Math.max(...valeurs, 1);
+  const min = Math.min(...valeurs, 0);
+  const echelle = max - min || 1;
+  const step = valeurs.length > 1 ? (largeur - padding * 2) / (valeurs.length - 1) : 0;
+
+  const points = valeurs.map((v, i) => ({
+    x: padding + i * step,
+    y: hauteur - paddingBas - ((v - min) / echelle) * (hauteur - paddingBas - padding),
+  }));
+
+  const cheminLigne = genererCourbeLissee(points);
+  const cheminAire = `${cheminLigne} L ${points[points.length - 1].x} ${hauteur - paddingBas} L ${points[0].x} ${hauteur - paddingBas} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${largeur} ${hauteur}`} className="w-full" style={{ height: hauteur }}>
+      <path d={cheminAire} fill={couleur} fillOpacity="0.08" />
+      <path d={cheminLigne} fill="none" stroke={couleur} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      {points.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="4" fill="white" stroke={couleur} strokeWidth="2.5">
+          <title>{formatValeur ? formatValeur(valeurs[i]) : valeurs[i]}</title>
+        </circle>
+      ))}
+      {labels.map((label, i) => (
+        <text key={i} x={points[i].x} y={hauteur - 6} textAnchor="middle" fontSize="10" fill="#9ca3af">
+          {label}
+        </text>
+      ))}
+    </svg>
+  );
+}
+
 export default function RapportsStats() {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
@@ -39,6 +112,8 @@ export default function RapportsStats() {
   const [filtres, setFiltres] = useState(filtresParDefaut());
   const [filtresAppliques, setFiltresAppliques] = useState(filtresParDefaut());
 
+  // Tableau 6 du mémoire : "Générer rapports et statistiques" / "Exporter
+  // rapport PDF" = Gérant uniquement.
   const estGerant = user?.role?.nom === 'gerant';
 
   useEffect(() => {
@@ -73,7 +148,13 @@ export default function RapportsStats() {
       const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
       window.open(url, '_blank');
     } catch (error) {
-      setErreur('Impossible de générer le rapport PDF.');
+      if (error.response?.data instanceof Blob && error.response.data.type === 'application/json') {
+        const texte = await error.response.data.text();
+        const json = JSON.parse(texte);
+        setErreur(json.message || 'Impossible de générer le rapport PDF.');
+      } else {
+        setErreur('Impossible de générer le rapport PDF.');
+      }
     } finally {
       setExportEnCours(false);
     }
@@ -89,8 +170,6 @@ export default function RapportsStats() {
     );
   }
 
-  const maxCa = Math.max(1, ...(stats?.ca_mensuel?.map((m) => m.total) ?? [1]));
-  const maxVentes = Math.max(1, ...(stats?.ventes_mensuel?.map((m) => m.nombre) ?? [1]));
   const anneeGraphique = stats?.periode?.debut ? new Date(stats.periode.debut).getFullYear() : ANNEE_COURANTE;
 
   return (
@@ -219,35 +298,23 @@ export default function RapportsStats() {
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
           <h2 className="font-display font-semibold text-ink900 mb-1">Chiffre d'affaires mensuel</h2>
           <p className="text-xs text-ink900/40 mb-4">Depuis janvier {anneeGraphique}</p>
-          <div className="flex gap-2 h-40">
-            {(stats?.ca_mensuel ?? []).map((m) => (
-              <div key={m.mois} className="flex-1 flex flex-col justify-end items-center gap-1 h-full">
-                <div
-                  className="w-full bg-indigo-700/15 rounded-t"
-                  style={{ height: `${Math.max(4, (m.total / maxCa) * 100)}%` }}
-                  title={formatMontant(m.total)}
-                />
-                <span className="text-[10px] text-ink900/40 shrink-0">{NOMS_MOIS[m.mois - 1]}</span>
-              </div>
-            ))}
-          </div>
+          <GraphiqueCourbe
+            valeurs={(stats?.ca_mensuel ?? []).map((m) => m.total)}
+            labels={libellesMois(stats?.ca_mensuel ?? [])}
+            couleur="#4338ca"
+            formatValeur={formatMontant}
+          />
         </div>
 
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
           <h2 className="font-display font-semibold text-ink900 mb-1">Nombre de ventes</h2>
           <p className="text-xs text-ink900/40 mb-4">Depuis janvier {anneeGraphique}</p>
-          <div className="flex gap-2 h-40">
-            {(stats?.ventes_mensuel ?? []).map((m) => (
-              <div key={m.mois} className="flex-1 flex flex-col justify-end items-center gap-1 h-full">
-                <div
-                  className="w-full bg-success/15 rounded-t"
-                  style={{ height: `${Math.max(4, (m.nombre / maxVentes) * 100)}%` }}
-                  title={`${m.nombre} ventes`}
-                />
-                <span className="text-[10px] text-ink900/40 shrink-0">{NOMS_MOIS[m.mois - 1]}</span>
-              </div>
-            ))}
-          </div>
+          <GraphiqueCourbe
+            valeurs={(stats?.ventes_mensuel ?? []).map((m) => m.nombre)}
+            labels={libellesMois(stats?.ventes_mensuel ?? [])}
+            couleur="#15803d"
+            formatValeur={(v) => `${v} ventes`}
+          />
         </div>
       </div>
 

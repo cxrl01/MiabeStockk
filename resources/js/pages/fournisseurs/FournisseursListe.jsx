@@ -11,6 +11,7 @@ export default function FournisseursListe() {
   const { boutiqueActiveId } = useBoutiqueActive();
   const [fournisseurs, setFournisseurs] = useState(null);
   const [recherche, setRecherche] = useState('');
+  const [detteSeulement, setDetteSeulement] = useState(false);
   const [erreur, setErreur] = useState('');
 
   // Tableau 6 du mémoire : "Créer fournisseur, Enregistrer livraison, Gérer dette
@@ -26,9 +27,11 @@ export default function FournisseursListe() {
   // Recharge quand la boutique active change (sélecteur multi-points-de-vente).
   useEffect(charger, [boutiqueActiveId]);
 
-  const fournisseursFiltres = (fournisseurs || []).filter((f) =>
-    f.nom.toLowerCase().includes(recherche.toLowerCase())
-  );
+  const fournisseursFiltres = (fournisseurs || []).filter((f) => {
+    const correspondRecherche = f.nom.toLowerCase().includes(recherche.toLowerCase());
+    const correspondDette = !detteSeulement || Number(f.dette) > 0;
+    return correspondRecherche && correspondDette;
+  });
 
   const totalDettes = (fournisseurs || []).reduce((s, f) => s + Number(f.dette), 0);
   const fournisseursAvecDette = (fournisseurs || []).filter((f) => Number(f.dette) > 0).length;
@@ -91,6 +94,21 @@ export default function FournisseursListe() {
           <p className="text-sm text-ink900/50 mb-2">Total dû</p>
           <p className="font-mono text-2xl font-semibold text-danger">{formatMontant(totalDettes)}</p>
         </div>
+      </div>
+
+      <div className="flex mb-6">
+        <button
+          type="button"
+          onClick={() => setDetteSeulement((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2.5 text-sm font-medium
+            transition-colors whitespace-nowrap ${
+              detteSeulement
+                ? 'border-danger/30 bg-danger/5 text-danger'
+                : 'border-ink900/15 text-ink900/70 hover:bg-ink900/5'
+            }`}
+        >
+          Avec solde dû seulement
+        </button>
       </div>
 
       <div className="bg-surface rounded-xl border border-ink900/10 overflow-x-auto">

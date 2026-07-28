@@ -15,6 +15,12 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class RapportController extends Controller
 {
+    /**
+     * Tableau 6 du memoire : "Generer rapports et statistiques" et "Exporter
+     * rapport PDF" n'apparaissent QUE dans la liste du Gerant. Pas de Policy
+     * dediee (Rapport n'est pas un modele Eloquent) : verification directe du
+     * role, comme le fait deja EquipePolicy pour la meme raison de portee.
+     */
     private function autoriserGerantSeul(): void
     {
         if (! Auth::user()->hasRole('gerant')) {
@@ -28,10 +34,10 @@ class RapportController extends Controller
     }
 
     /**
-     * Résout la période à analyser à partir des paramètres de filtre :
+     * Resout la periode a analyser a partir des parametres de filtre :
      * - type=mois    -> mois + annee (defaut : mois/annee en cours)
      * - type=annee   -> annee entiere
-     * - type=periode -> debut + fin (dates libres)
+     * - type=periode -> debut + fin (dates libres, peut chevaucher plusieurs annees)
      * Retourne [Carbon $debut, Carbon $fin, string $type].
      */
     private function resoudrePeriode(Request $request): array
@@ -56,6 +62,12 @@ class RapportController extends Controller
         return [$debut, $fin, $type];
     }
 
+    /**
+     * Donnees agregees pour l'ecran Rapports & Stats, sur la periode filtree :
+     * CA, ventes, nouveaux clients, produits vendus, evolution mensuelle
+     * (CA + nombre de ventes, un point par mois calendaire meme si la
+     * periode chevauche plusieurs annees), top 5 produits.
+     */
     public function statistiques(Request $request): JsonResponse
     {
         $this->autoriserGerantSeul();
@@ -70,29 +82,31 @@ class RapportController extends Controller
             ->whereBetween('created_at', [$debut, $fin])
             ->get(['id', 'montant_ttc', 'created_at']);
 
-        // Graphiques mensuels : toujours affichés sur l'année du début de la
-        // période sélectionnée (Janvier -> mois en cours si année courante,
-        // sinon Janvier -> Décembre ou mois de fin selon le cas).
-        $anneeGraphique = $debut->year;
-        if ($anneeGraphique === now()->year) {
-            $dernierMois = now()->month;
-        } else {
-            $dernierMois = $fin->year === $anneeGraphique ? $fin->month : 12;
-        }
-
-        $ventesAnneeGraphique = Commande::query()
+        // Graphiques mensuels : un point par mois calendaire, de $debut a $fin,
+        // meme si la periode chevauche plusieurs annees (ex. juin 2025 -> mars 2026).
+        $ventesGraphique = Commande::query()
             ->where('type', 'vente')
             ->where('statut', 'validee')
             ->whereIn('boutique_id', $boutiqueIds)
-            ->whereYear('created_at', $anneeGraphique)
+            ->whereBetween('created_at', [$debut->copy()->startOfMonth(), $fin->copy()->endOfMonth()])
             ->get(['id', 'montant_ttc', 'created_at']);
 
         $caMensuel = [];
         $ventesMensuel = [];
-        for ($mois = 1; $mois <= $dernierMois; $mois++) {
-            $ventesDuMois = $ventesAnneeGraphique->filter(fn ($v) => (int) $v->created_at->format('n') === $mois);
-            $caMensuel[] = ['mois' => $mois, 'total' => (float) $ventesDuMois->sum('montant_ttc')];
-            $ventesMensuel[] = ['mois' => $mois, 'nombre' => $ventesDuMois->count()];
+        $curseur = $debut->copy()->startOfMonth();
+        $limite = $fin->copy()->startOfMonth();
+        while ($curseur->lte($limite)) {
+            $anneeCourante = $curseur->year;
+            $moisCourant = $curseur->month;
+
+            $ventesDuMois = $ventesGraphique->filter(
+                fn ($v) => $v->created_at->year === $anneeCourante && $v->created_at->month === $moisCourant
+            );
+
+            $caMensuel[] = ['mois' => $moisCourant, 'annee' => $anneeCourante, 'total' => (float) $ventesDuMois->sum('montant_ttc')];
+            $ventesMensuel[] = ['mois' => $moisCourant, 'annee' => $anneeCourante, 'nombre' => $ventesDuMois->count()];
+
+            $curseur->addMonth();
         }
 
         $topProduits = DB::table('ligne_commandes')
@@ -129,6 +143,10 @@ class RapportController extends Controller
         ]);
     }
 
+    /**
+     * "Resultat net" (glossaire du memoire) = CA - cout des livraisons - depenses,
+     * sur la periode filtree.
+     */
     public function resultatNet(Request $request): JsonResponse
     {
         $this->autoriserGerantSeul();
@@ -162,6 +180,10 @@ class RapportController extends Controller
         ]);
     }
 
+    /**
+     * Export PDF du rapport (Tableau 6 : "Exporter rapport PDF", Gerant seul).
+     * Respecte le meme filtre de periode que l'ecran (type/mois/annee/debut/fin).
+     */
     public function exportPdf(Request $request)
     {
         $this->autoriserGerantSeul();
@@ -177,6 +199,6 @@ class RapportController extends Controller
             'resultat' => $resultat,
         ]);
 
-        return $pdf->stream('rapport-' . now()->format('Y-m') . '.pdf');
+        return $pdf->stream('rapport-' . now()->format('Y-m-d') . '.pdf');
     }
 }

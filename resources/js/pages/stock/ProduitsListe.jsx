@@ -11,7 +11,10 @@ export default function ProduitsListe() {
   const { user } = useAuth();
   const { boutiqueActiveId } = useBoutiqueActive();
   const [produits, setProduits] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [recherche, setRecherche] = useState('');
+  const [categorieId, setCategorieId] = useState('');
+  const [stockBasSeulement, setStockBasSeulement] = useState(false);
   const [erreur, setErreur] = useState('');
 
   const inputFichierRef = useRef(null);
@@ -29,13 +32,22 @@ export default function ProduitsListe() {
       .catch(() => setErreur("Impossible de charger les produits."));
   };
 
+  const chargerCategories = () => {
+    api.get('/categories').then(({ data }) => setCategories(data));
+  };
+
   // Recharge quand la boutique active change (sélecteur multi-points-de-vente
   // du Gérant) — le backend filtre desormais sur cette boutique uniquement.
   useEffect(charger, [boutiqueActiveId]);
+  useEffect(chargerCategories, [boutiqueActiveId]);
 
   const produitsFiltres = (produits || []).filter((p) => {
     const terme = recherche.toLowerCase();
-    return p.nom.toLowerCase().includes(terme) || (p.reference ?? '').toLowerCase().includes(terme);
+    const correspondRecherche =
+      p.nom.toLowerCase().includes(terme) || (p.reference ?? '').toLowerCase().includes(terme);
+    const correspondCategorie = !categorieId || String(p.categorie_id) === String(categorieId);
+    const correspondStockBas = !stockBasSeulement || p.quantite_stock <= p.seuil_alerte;
+    return correspondRecherche && correspondCategorie && correspondStockBas;
   });
 
   const alertes = (produits || []).filter((p) => p.quantite_stock <= p.seuil_alerte).length;
@@ -138,6 +150,13 @@ export default function ProduitsListe() {
               {importEnCours ? 'Import en cours…' : 'Importer depuis Excel'}
             </button>
             <Link
+              to="/categories"
+              className="inline-flex items-center justify-center rounded-lg border border-ink900/15
+                text-ink900/70 hover:bg-ink900/5 text-sm font-medium px-4 py-2.5 transition-colors whitespace-nowrap"
+            >
+              Gérer les catégories
+            </Link>
+            <Link
               to="/stock/nouveau"
               className="inline-flex items-center justify-center rounded-lg bg-ochre-500 hover:bg-ochre-600
                 text-white text-sm font-medium px-4 py-2.5 transition-colors whitespace-nowrap"
@@ -172,6 +191,33 @@ export default function ProduitsListe() {
           <p className="text-sm text-ink900/50 mb-2">Valeur stock estimée</p>
           <p className="font-mono text-2xl font-semibold text-success">{formatMontant(valeurStock)}</p>
         </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <select
+          value={categorieId}
+          onChange={(e) => setCategorieId(e.target.value)}
+          className="rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm
+            focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+        >
+          <option value="">Toutes les catégories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.nom}</option>
+          ))}
+        </select>
+
+        <button
+          type="button"
+          onClick={() => setStockBasSeulement((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2.5 text-sm font-medium
+            transition-colors whitespace-nowrap ${
+              stockBasSeulement
+                ? 'border-danger/30 bg-danger/5 text-danger'
+                : 'border-ink900/15 text-ink900/70 hover:bg-ink900/5'
+            }`}
+        >
+          ⚠ Stock bas seulement
+        </button>
       </div>
 
       <div className="bg-surface rounded-xl border border-ink900/10 overflow-x-auto">

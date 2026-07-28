@@ -12,6 +12,7 @@ export default function ClientsListe() {
   const { boutiqueActiveId, boutiquesGerees } = useBoutiqueActive();
   const [clients, setClients] = useState(null);
   const [recherche, setRecherche] = useState('');
+  const [detteSeulement, setDetteSeulement] = useState(false);
   const [erreur, setErreur] = useState('');
 
   // Nom de la boutique ACTIVE (pas systematiquement la premiere boutique geree)
@@ -28,9 +29,11 @@ export default function ClientsListe() {
   // Recharge quand la boutique active change (sélecteur multi-points-de-vente).
   useEffect(charger, [boutiqueActiveId]);
 
-  const clientsFiltres = (clients || []).filter((c) =>
-    c.nom.toLowerCase().includes(recherche.toLowerCase())
-  );
+  const clientsFiltres = (clients || []).filter((c) => {
+    const correspondRecherche = c.nom.toLowerCase().includes(recherche.toLowerCase());
+    const correspondDette = !detteSeulement || Number(c.dette) > 0;
+    return correspondRecherche && correspondDette;
+  });
 
   const totalDettes = (clients || []).reduce((s, c) => s + Number(c.dette), 0);
   const clientsAvecDette = (clients || []).filter((c) => Number(c.dette) > 0).length;
@@ -82,6 +85,21 @@ export default function ClientsListe() {
           <p className="text-sm text-ink900/50 mb-2">Total dettes</p>
           <p className="font-mono text-2xl font-semibold text-danger">{formatMontant(totalDettes)}</p>
         </div>
+      </div>
+
+      <div className="flex mb-6">
+        <button
+          type="button"
+          onClick={() => setDetteSeulement((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2.5 text-sm font-medium
+            transition-colors whitespace-nowrap ${
+              detteSeulement
+                ? 'border-danger/30 bg-danger/5 text-danger'
+                : 'border-ink900/15 text-ink900/70 hover:bg-ink900/5'
+            }`}
+        >
+          Avec dette seulement
+        </button>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
