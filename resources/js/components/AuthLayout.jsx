@@ -61,6 +61,10 @@ function PanneauVitrine() {
 /**
  * Layout auth : formulaire centré (par défaut), ou split-screen avec
  * panneau de marque quand showcase=true (utilisé sur l'inscription).
+ *
+ * Le nom du site et le titre de la page (Connexion, Inscription, ...) sont
+ * centrés, et le formulaire est posé dans une carte bordée qui le délimite
+ * visuellement du reste de la page.
  */
 export default function AuthLayout({ title, subtitle, children, footer, showcase = false }) {
   return (
@@ -83,22 +87,29 @@ export default function AuthLayout({ title, subtitle, children, footer, showcase
 
         <main className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12">
           <div className="w-full max-w-[400px]">
+            {/* Nom du site, centré */}
             {!showcase && (
               <Link
                 to="/"
-                className="mb-10 inline-block font-display text-xl font-semibold tracking-tight text-ink900"
+                className="mb-8 flex justify-center font-display text-xl font-semibold tracking-tight text-ink900"
               >
                 <span className="text-indigo-600">Miabé</span>
                 <span className="text-ochre-500">Stock</span>
               </Link>
             )}
 
-            <h2 className="font-display text-2xl font-semibold text-ink900">{title}</h2>
-            {subtitle && <p className="mt-2 text-sm text-ink900/55">{subtitle}</p>}
+            {/* Titre de la page, centré */}
+            <div className="text-center">
+              <h2 className="font-display text-2xl font-semibold text-ink900">{title}</h2>
+              {subtitle && <p className="mt-2 text-sm text-ink900/55">{subtitle}</p>}
+            </div>
 
-            <div className="mt-8">{children}</div>
+            {/* Formulaire délimité par une carte bordée */}
+            <div className="mt-8 rounded-2xl border border-ink900/10 bg-white/80 p-6 shadow-sm backdrop-blur-sm sm:p-7">
+              {children}
+            </div>
 
-            {footer && <div className="mt-8 text-center text-sm text-ink900/55">{footer}</div>}
+            {footer && <div className="mt-6 text-center text-sm text-ink900/55">{footer}</div>}
           </div>
         </main>
       </div>
