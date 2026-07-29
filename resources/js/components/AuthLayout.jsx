@@ -105,7 +105,7 @@ export default function AuthLayout({ title, subtitle, children, footer, showcase
             </div>
 
             {/* Formulaire délimité par une carte bordée */}
-            <div className="mt-8 rounded-2xl border border-ink900/10 bg-white/80 p-6 shadow-sm backdrop-blur-sm sm:p-7">
+            <div className="mt-8 rounded-2xl border border-ink900/10 bg-surface/80 p-6 shadow-sm backdrop-blur-sm sm:p-7">
               {children}
             </div>
 

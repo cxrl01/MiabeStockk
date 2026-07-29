@@ -135,7 +135,7 @@ export default function Register() {
               className={`rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-colors ${
                 form.multi_points_vente === true
                   ? 'border-ochre-500 bg-ochre-500/10 text-ochre-600'
-                  : 'border-ink900/15 bg-white text-ink900/70 hover:border-ink900/30'
+                  : 'border-ink900/15 bg-surface text-ink900/70 hover:border-ink900/30'
               }`}
             >
               Oui
@@ -146,7 +146,7 @@ export default function Register() {
               className={`rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-colors ${
                 form.multi_points_vente === false
                   ? 'border-indigo-700 bg-indigo-700/5 text-indigo-700'
-                  : 'border-ink900/15 bg-white text-ink900/70 hover:border-ink900/30'
+                  : 'border-ink900/15 bg-surface text-ink900/70 hover:border-ink900/30'
               }`}
             >
               Non, un seul
