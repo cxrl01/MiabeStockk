@@ -24,8 +24,7 @@ class BoutiqueController extends Controller
      * Super Admin : toutes les boutiques de la plateforme (Tableau 6,
      * "Consulter liste des boutiques"), avec gerant + effectif + CA cumule.
      * Gerant : ses boutiques (mode multi points de vente). Staff : sa
-     * boutique unique. Les boutiques au statut "supprimee" sont exclues
-     * partout (suppression = statut, pas suppression physique).
+     * boutique unique.
      */
     public function index(): JsonResponse
     {
@@ -33,18 +32,13 @@ class BoutiqueController extends Controller
 
         $boutiques = match (true) {
             $user->hasRole('super_admin') => Boutique::with('gerant:id,nom,prenom')
-                ->where('statut', '!=', 'supprimee')
                 ->withCount('staff')
                 ->withSum(['commandes as ca_total' => function ($q) {
                     $q->where('type', 'vente')->where('statut', 'validee');
                 }], 'montant_ttc')
                 ->get(),
-            $user->hasRole('gerant') => $user->boutiquesGerees()
-                ->where('statut', '!=', 'supprimee')
-                ->get(),
-            default => Boutique::where('id', $user->boutique_id)
-                ->where('statut', '!=', 'supprimee')
-                ->get(),
+            $user->hasRole('gerant') => $user->boutiquesGerees()->get(),
+            default => Boutique::where('id', $user->boutique_id)->get(),
         };
 
         return response()->json($boutiques);
@@ -69,8 +63,8 @@ class BoutiqueController extends Controller
 
     /**
      * Fiche detail d'une boutique (utilisee par AdminBoutiqueDetail.jsx) :
-     * gerant charge (avec email), EQUIPE complete (nom/prenom/email/role) au
-     * lieu d'un simple comptage, et CA cumule calcule.
+     * gerant charge (avec email), equipe complete (nom/prenom/email/role),
+     * CA cumule calcule.
      */
     public function show(Boutique $boutique): JsonResponse
     {
@@ -101,9 +95,7 @@ class BoutiqueController extends Controller
 
     /**
      * Tableau 6 : "Suspendre boutique" (Super Admin). Motif obligatoire,
-     * trace dans le journal d'activite (metadata) + email au gerant. L'envoi
-     * d'email est protege par try/catch : une panne SMTP ne doit pas faire
-     * echouer l'action de suspension elle-meme (deja commit en base).
+     * trace dans le journal d'activite (metadata) + email au gerant.
      */
     public function suspendre(Request $request, Boutique $boutique): JsonResponse
     {
@@ -137,11 +129,6 @@ class BoutiqueController extends Controller
         return response()->json($boutique);
     }
 
-    /**
-     * Tableau 6 : "Réactiver boutique" (Super Admin). Pas de motif requis
-     * (jamais ete le cas) + email au gerant pour l'informer du retour a la
-     * normale.
-     */
     public function reactiver(Boutique $boutique): JsonResponse
     {
         $this->authorize('reactiver', $boutique);
@@ -168,34 +155,57 @@ class BoutiqueController extends Controller
     }
 
     /**
-     * Tableau 6 : "Supprimer boutique" (Super Admin ou Gerant sur ses
-     * propres boutiques). Motif obligatoire. La "suppression" est un
-     * changement de statut, pas une suppression physique en base : les
-     * commandes, le CA cumule et le journal d'activite restent intacts et
-     * consultables (traçabilité comptable). La boutique disparait juste de
-     * toutes les listes actives (voir index()).
+     * "Supprimer boutique" : deux flux distincts selon qui agit.
+     *
+     * - Super Admin : motif obligatoire + email au gerant concerne (le
+     *   gerant n'est pas l'auteur de l'action, il doit etre informe).
+     * - Gerant (sur sa propre boutique) : pas de motif ni d'email (il est
+     *   lui-meme l'auteur), mais GARDE-FOU obligatoire : impossible de
+     *   supprimer sa derniere boutique restante, sinon il se retrouve sans
+     *   aucune boutique geree et l'application devient inutilisable pour lui.
+     *
+     * Dans les deux cas : refus si la boutique a deja de l'activite
+     * (ventes/livraisons enregistrees), pour l'integrite des donnees.
      */
     public function destroy(Request $request, Boutique $boutique): JsonResponse
     {
         $this->authorize('delete', $boutique);
 
+        $user = Auth::user();
+
+        if (Commande::where('boutique_id', $boutique->id)->exists()) {
+            return response()->json([
+                'message' => 'Impossible de supprimer une boutique ayant déjà des opérations enregistrées. Suspendez-la à la place.',
+            ], 422);
+        }
+
+        if ($user->hasRole('gerant')) {
+            if ($user->boutiquesGerees()->count() <= 1) {
+                return response()->json([
+                    'message' => 'Impossible de supprimer votre unique boutique.',
+                ], 422);
+            }
+
+            $this->journaliser('boutique.supprimee', $boutique, ['nom' => $boutique->nom]);
+            $boutique->delete();
+
+            return response()->json(null, 204);
+        }
+
+        // Flux Super Admin (comportement existant, inchange)
         $donnees = $request->validate([
             'motif' => ['required', 'string', 'min:5', 'max:500'],
         ]);
 
-        if ($boutique->statut === 'supprimee') {
-            return response()->json(['message' => 'Cette boutique est déjà supprimée.'], 422);
-        }
-
         $nomBoutique = $boutique->nom;
         $gerant = $boutique->gerant;
-
-        $boutique->update(['statut' => 'supprimee']);
 
         $this->journaliser('boutique.supprimee', $boutique, [
             'nom' => $nomBoutique,
             'motif' => $donnees['motif'],
         ]);
+
+        $boutique->delete();
 
         if ($gerant?->email) {
             try {

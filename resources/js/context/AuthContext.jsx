@@ -52,8 +52,19 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  // Recharge l'utilisateur courant depuis le serveur (ex : après modification
+  // d'une boutique gérée, pour que boutiques_gerees reflète la nouvelle TVA
+  // partout où elle est utilisée via BoutiqueActiveContext).
+  const refreshUser = async () => {
+    const { data } = await api.get('/auth/me');
+    setUser(data);
+    return data;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, chargementInitial, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, setUser, chargementInitial, login, register, logout, refreshUser }}
+    >
       <BoutiqueActiveProvider user={user}>
         {children}
       </BoutiqueActiveProvider>

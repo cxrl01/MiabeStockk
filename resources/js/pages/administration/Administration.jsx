@@ -14,7 +14,7 @@ const CHAMPS_INITIAUX = {
 };
 
 export default function Administration() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [boutiques, setBoutiques] = useState([]);
   const [boutiqueActiveId, setBoutiqueActiveId] = useState('');
   const [form, setForm] = useState(CHAMPS_INITIAUX);
@@ -34,7 +34,7 @@ export default function Administration() {
   const estGerant = user?.role?.nom === 'gerant';
 
   const chargerBoutiques = () => {
-    api.get('/boutiques').then(({ data }) => {
+    return api.get('/boutiques').then(({ data }) => {
       setBoutiques(data);
       if (data.length && !boutiqueActiveId) {
         setBoutiqueActiveId(String(data[0].id));
@@ -43,7 +43,9 @@ export default function Administration() {
     });
   };
 
-  useEffect(chargerBoutiques, []);
+  useEffect(() => {
+    chargerBoutiques();
+  }, []);
 
   const remplirForm = (b) => {
     setForm({
@@ -77,7 +79,11 @@ export default function Administration() {
     try {
       await api.put(`/boutiques/${boutiqueActiveId}`, form);
       setSucces(true);
-      chargerBoutiques();
+      // On rafraîchit la liste locale ET l'utilisateur (donc
+      // boutiques_gerees dans AuthContext/BoutiqueActiveContext),
+      // sinon la nouvelle TVA reste invisible ailleurs dans l'app
+      // tant que la page n'est pas rechargée.
+      await Promise.all([chargerBoutiques(), refreshUser()]);
     } catch (error) {
       if (error?.response?.status === 422) {
         setErreurs(extraireErreursValidation(error));
@@ -100,7 +106,7 @@ export default function Administration() {
       });
       setModalNouvelleBoutiqueOuvert(false);
       e.target.reset();
-      chargerBoutiques();
+      await Promise.all([chargerBoutiques(), refreshUser()]);
     } catch (error) {
       alert(error?.response?.data?.message || 'Erreur lors de la création de la boutique.');
     }
@@ -128,7 +134,7 @@ export default function Administration() {
       if (idSupprime === boutiqueActiveId) {
         setBoutiqueActiveId('');
       }
-      chargerBoutiques();
+      await Promise.all([chargerBoutiques(), refreshUser()]);
     } catch (error) {
       setErreurSuppression(
         error?.response?.data?.message || 'Une erreur est survenue lors de la suppression.'

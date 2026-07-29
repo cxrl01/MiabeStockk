@@ -108,7 +108,7 @@ Route::prefix('v1')->group(function () {
         // sienne) — pas besoin de role:super_admin ici, sinon /administration
         // (espace Gerant) casse.
         Route::apiResource('boutiques', BoutiqueController::class)
-            ->only(['index', 'store', 'show', 'update']);
+            ->only(['index', 'store', 'show', 'update', 'destroy']);
 
         // --- Espace Super Admin ---
         // Uniquement les actions reellement reservees au Super Admin :
