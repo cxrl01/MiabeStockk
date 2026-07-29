@@ -10,24 +10,22 @@ export default function AppShell({ title, children }) {
   const { user } = useAuth();
   const { boutiqueActiveId } = useBoutiqueActive();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [alertes, setAlertes] = useState({ stock: 0, ventes: 0 });
 
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', collapsed);
   }, [collapsed]);
 
-  /**
-   * Badges de la sidebar : doivent suivre la boutique ACTIVE (comme les
-   * écrans /stock et /ventes vers lesquels ils pointent), pas l'agrégat
-   * consolidé de /rapports/dashboard (volontairement toutes-boutiques,
-   * cf. Dashboard.jsx). Utilise donc /produits/alertes (deja scope via
-   * ResolveBoutiqueActive) et /ventes?statut_paiement=... (meme mecanisme)
-   * plutot que le dashboard.
-   *
-   * Pas de fetch pour le Super Admin : il n'a pas de boutique active, ces
-   * badges n'ont pas de sens pour lui (sa sidebar est SidebarSuperAdmin,
-   * qui n'affiche de toute facon pas ces liens).
-   */
+  // Ferme le panneau mobile automatiquement si on repasse en desktop
+  useEffect(() => {
+    const fermerSiDesktop = () => {
+      if (window.innerWidth >= 1024) setMobileOpen(false);
+    };
+    window.addEventListener('resize', fermerSiDesktop);
+    return () => window.removeEventListener('resize', fermerSiDesktop);
+  }, []);
+
   useEffect(() => {
     if (user?.role?.nom === 'super_admin') return;
 
@@ -45,17 +43,27 @@ export default function AppShell({ title, children }) {
   return (
     <div className="flex min-h-screen bg-paper">
       {estSuperAdmin ? (
-        <SidebarSuperAdmin collapsed={collapsed} />
+        <SidebarSuperAdmin
+          collapsed={collapsed}
+          mobileOpen={mobileOpen}
+          onCloseMobile={() => setMobileOpen(false)}
+        />
       ) : (
         <Sidebar
           collapsed={collapsed}
+          mobileOpen={mobileOpen}
+          onCloseMobile={() => setMobileOpen(false)}
           stockAlertesCount={alertes.stock}
           ventesAlertesCount={alertes.ventes}
         />
       )}
       <div className="flex-1 min-w-0">
-        <Topbar title={title} onToggleSidebar={() => setCollapsed((c) => !c)} />
-        <main className="px-6 py-6">{children}</main>
+        <Topbar
+          title={title}
+          onToggleSidebar={() => setCollapsed((c) => !c)}
+          onToggleMobileSidebar={() => setMobileOpen((v) => !v)}
+        />
+        <main className="px-4 py-4 sm:px-6 sm:py-6">{children}</main>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import { IconMenu, IconSun, IconMoon, IconLogout, IconBox } from './Icons';
 
-export default function Topbar({ title, onToggleSidebar }) {
+export default function Topbar({ title, onToggleSidebar, onToggleMobileSidebar }) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { boutiqueActiveId, setBoutiqueActiveId, boutiquesGerees, estGerantMulti } = useBoutiqueActive();
@@ -33,28 +33,39 @@ export default function Topbar({ title, onToggleSidebar }) {
   const initiales = `${user?.prenom?.[0] ?? ''}${user?.nom?.[0] ?? ''}`.toUpperCase();
 
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between border-b border-ink900/10 bg-paper/90 backdrop-blur px-6 py-4">
-      <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-ink900/10 bg-paper/90 backdrop-blur px-4 py-3 sm:px-6 sm:py-4">
+      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+        {/* Bouton mobile : ouvre/ferme le panneau off-canvas */}
         <button
           type="button"
-          onClick={onToggleSidebar}
-          className="hidden lg:flex text-ink900/50 hover:text-ink900 transition-colors"
+          onClick={onToggleMobileSidebar}
+          className="flex lg:hidden text-ink900/50 hover:text-ink900 transition-colors shrink-0"
           aria-label="Afficher/Masquer le menu"
         >
           <IconMenu />
         </button>
 
-        <div>
-          <h1 className="font-display text-lg font-semibold text-ink900">{title}</h1>
-          <p className="text-xs text-ink900/40 capitalize">
+        {/* Bouton desktop : collapse/expand la sidebar fixe */}
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="hidden lg:flex text-ink900/50 hover:text-ink900 transition-colors shrink-0"
+          aria-label="Réduire/Étendre le menu"
+        >
+          <IconMenu />
+        </button>
+
+        <div className="min-w-0">
+          <h1 className="font-display text-base sm:text-lg font-semibold text-ink900 truncate">{title}</h1>
+          <p className="hidden sm:block text-xs text-ink900/40 capitalize">
             Accueil / <span className="text-ink900/60">{title}</span>
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         {estGerantMulti && (
-          <div className="hidden sm:flex items-center gap-2 rounded-lg border border-ink900/15 bg-white px-2.5 py-1.5">
+          <div className="hidden md:flex items-center gap-2 rounded-lg border border-ink900/15 bg-white px-2.5 py-1.5">
             <span className="text-ink900/40">
               <IconBox />
             </span>
@@ -71,7 +82,7 @@ export default function Topbar({ title, onToggleSidebar }) {
           </div>
         )}
 
-        <span className="hidden sm:block font-mono text-xs text-ink900/40 capitalize">{aujourdhui}</span>
+        <span className="hidden lg:block font-mono text-xs text-ink900/40 capitalize">{aujourdhui}</span>
 
         <button
           type="button"
