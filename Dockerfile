@@ -40,5 +40,6 @@ EXPOSE 10000
 # Démarrage avec cache, migrations + SEEDER, et multi-workers
 CMD php artisan config:cache && \
     php artisan route:cache && \
+    php artisan storage:link --force || true
     php artisan migrate --force --seed && \
     PHP_CLI_SERVER_WORKERS=4 php artisan serve --host 0.0.0.0 --port ${PORT:-10000} --no-reload
