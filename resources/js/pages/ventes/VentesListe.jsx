@@ -13,6 +13,7 @@ export default function VentesListe() {
   const { boutiqueActiveId } = useBoutiqueActive();
   const [ventes, setVentes] = useState(null);
   const [recherche, setRecherche] = useState('');
+  const [filtrePaiement, setFiltrePaiement] = useState('tous');
   const [erreur, setErreur] = useState('');
   const [factureEnCours, setFactureEnCours] = useState(null); // id de la vente en cours d'impression
 
@@ -29,10 +30,14 @@ export default function VentesListe() {
 
   const ventesFiltrees = (ventes || []).filter((v) => {
     const terme = recherche.toLowerCase();
-    return (
+    const correspondRecherche =
       v.numero.toLowerCase().includes(terme) ||
-      (v.client?.nom ?? 'client comptant').toLowerCase().includes(terme)
-    );
+      (v.client?.nom ?? 'client comptant').toLowerCase().includes(terme);
+
+    const correspondPaiement =
+      filtrePaiement === 'tous' || v.statut_paiement === filtrePaiement;
+
+    return correspondRecherche && correspondPaiement;
   });
 
   const totalVentes = ventes?.length ?? 0;
@@ -119,6 +124,21 @@ export default function VentesListe() {
         </div>
       </div>
 
+      {/* Filtres */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <select
+          value={filtrePaiement}
+          onChange={(e) => setFiltrePaiement(e.target.value)}
+          className="rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm
+            focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+        >
+          <option value="tous">Tous les paiements</option>
+          <option value="payee">Payée</option>
+          <option value="partielle">Partiel</option>
+          <option value="non_payee">Non payée</option>
+        </select>
+      </div>
+
       {/* Table */}
       <div className="bg-surface rounded-xl border border-ink900/10 overflow-hidden">
         <table className="w-full text-sm">
@@ -177,10 +197,14 @@ export default function VentesListe() {
                 <td colSpan={7}>
                   <EmptyState
                     icon={<IconRecu />}
-                    title="Aucune vente pour l'instant"
-                    subtitle="Les transactions encaissées apparaîtront ici, réf par réf."
+                    title={ventes.length === 0 ? "Aucune vente pour l'instant" : "Aucune vente ne correspond"}
+                    subtitle={
+                      ventes.length === 0
+                        ? "Les transactions encaissées apparaîtront ici, réf par réf."
+                        : "Essayez un autre filtre ou une autre recherche."
+                    }
                     action={
-                      peutVendre && (
+                      peutVendre && ventes.length === 0 && (
                         <Link
                           to="/ventes/nouvelle"
                           className="text-sm font-medium text-indigo-700 hover:underline"

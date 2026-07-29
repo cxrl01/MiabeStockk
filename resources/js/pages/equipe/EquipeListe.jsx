@@ -16,6 +16,7 @@ export default function EquipeListe() {
   const { boutiqueActiveId } = useBoutiqueActive();
   const [employes, setEmployes] = useState(null);
   const [recherche, setRecherche] = useState('');
+  const [filtreStatut, setFiltreStatut] = useState('tous');
   const [erreur, setErreur] = useState('');
 
   const estGerant = user?.role?.nom === 'gerant';
@@ -28,9 +29,18 @@ export default function EquipeListe() {
 
   useEffect(charger, [boutiqueActiveId]);
 
-  const employesFiltres = (employes || []).filter((e) =>
-    `${e.nom} ${e.prenom ?? ''}`.toLowerCase().includes(recherche.toLowerCase())
-  );
+  const employesFiltres = (employes || []).filter((e) => {
+    const correspondRecherche = `${e.nom} ${e.prenom ?? ''}`
+      .toLowerCase()
+      .includes(recherche.toLowerCase());
+
+    const correspondStatut =
+      filtreStatut === 'tous' ||
+      (filtreStatut === 'actif' && e.actif) ||
+      (filtreStatut === 'suspendu' && !e.actif);
+
+    return correspondRecherche && correspondStatut;
+  });
 
   const supprimer = async (employe) => {
     if (!window.confirm(`Supprimer "${employe.nom}" ?`)) return;
@@ -95,6 +105,19 @@ export default function EquipeListe() {
         </div>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <select
+          value={filtreStatut}
+          onChange={(e) => setFiltreStatut(e.target.value)}
+          className="rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm
+            focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+        >
+          <option value="tous">Tous les statuts</option>
+          <option value="actif">Actif</option>
+          <option value="suspendu">Suspendu</option>
+        </select>
+      </div>
+
       <div className="bg-surface rounded-xl border border-ink900/10 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -147,12 +170,18 @@ export default function EquipeListe() {
                 <td colSpan={6}>
                   <EmptyState
                     icon={<IconSilhouette />}
-                    title="Aucun membre"
-                    subtitle="Ajoute les comptes de ton équipe : gestionnaires et commerciaux."
+                    title={employes.length === 0 ? 'Aucun membre' : 'Aucun membre ne correspond'}
+                    subtitle={
+                      employes.length === 0
+                        ? 'Ajoute les comptes de ton équipe : gestionnaires et commerciaux.'
+                        : 'Essayez un autre filtre ou une autre recherche.'
+                    }
                     action={
-                      <Link to="/equipe/nouveau" className="text-sm font-medium text-indigo-700 hover:underline">
-                        Ajouter un membre →
-                      </Link>
+                      employes.length === 0 && (
+                        <Link to="/equipe/nouveau" className="text-sm font-medium text-indigo-700 hover:underline">
+                          Ajouter un membre →
+                        </Link>
+                      )
                     }
                   />
                 </td>

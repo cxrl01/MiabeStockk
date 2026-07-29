@@ -20,7 +20,9 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile, stockAle
     ? boutiquesGerees?.find((b) => b.id === boutiqueActiveId)
     : null;
 
-  const boutiqueNom = boutiqueActive?.nom || user?.boutique?.nom || user?.boutiques_gerees?.[0]?.nom || 'Ma boutique';
+  const boutiqueCourante = boutiqueActive || user?.boutique || user?.boutiques_gerees?.[0] || null;
+  const boutiqueNom = boutiqueCourante?.nom || 'Ma boutique';
+  const boutiqueLogoUrl = boutiqueCourante?.logo_url || null;
   const nomComplet = `${user?.prenom ?? ''} ${user?.nom ?? ''}`.trim() || 'Utilisateur';
   const initiales = `${user?.prenom?.charAt(0) ?? ''}${user?.nom?.charAt(0) ?? ''}`.toUpperCase() || 'U';
   const posteAffiche = user?.poste || (estGerant ? 'Gérant' : estGestionnaire ? 'Gestionnaire' : 'Commercial');
@@ -102,8 +104,12 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile, stockAle
         `}
       >
         <div className="flex items-center gap-3 px-4 py-5">
-          <div className="h-9 w-9 shrink-0 rounded-lg bg-indigo-700 text-paper font-display font-semibold flex items-center justify-center">
-            {boutiqueNom.charAt(0).toUpperCase()}
+          <div className="h-9 w-9 shrink-0 rounded-lg bg-indigo-700 text-paper font-display font-semibold flex items-center justify-center overflow-hidden">
+            {boutiqueLogoUrl ? (
+              <img src={boutiqueLogoUrl} alt={boutiqueNom} className="h-full w-full object-cover" />
+            ) : (
+              boutiqueNom.charAt(0).toUpperCase()
+            )}
           </div>
           <div className={`min-w-0 ${collapsedEffectif ? 'lg:hidden' : ''}`}>
             <p className="font-display font-semibold text-ink900 text-sm truncate">{boutiqueNom}</p>

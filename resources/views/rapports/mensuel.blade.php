@@ -37,6 +37,9 @@
     @endphp
 
     <div class="header">
+        @if(($boutique->logo_base64 ?? null))
+            <img src="{{ $boutique->logo_base64 }}" style="max-height: 50px; max-width: 160px; margin-bottom: 8px;" alt="Logo">
+        @endif
         <div class="boutique-nom">{{ $boutique->nom ?? 'MiabéStock' }}</div>
         <div>Rapport — du {{ $debutPeriode->format('d/m/Y') }} au {{ $finPeriode->format('d/m/Y') }}</div>
     </div>

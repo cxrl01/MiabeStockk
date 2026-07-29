@@ -41,6 +41,9 @@
         <table>
             <tr>
                 <td style="width: 60%;">
+                    @if($vente->boutique->logo_base64)
+                        <img src="{{ $vente->boutique->logo_base64 }}" style="max-height: 50px; max-width: 160px; margin-bottom: 8px;" alt="Logo">
+                    @endif
                     <div class="boutique-nom">{{ $vente->boutique->nom }}</div>
                     <div class="boutique-info">
                         @if($vente->boutique->adresse)

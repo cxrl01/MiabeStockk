@@ -33,6 +33,9 @@
 <body>
 
     <div class="header">
+        @if($paiement->commande->boutique->logo_base64)
+            <img src="{{ $paiement->commande->boutique->logo_base64 }}" style="max-height: 40px; max-width: 140px; margin-bottom: 6px;" alt="Logo">
+        @endif
         <div class="boutique-nom">{{ $paiement->commande->boutique->nom }}</div>
         <div class="boutique-info">
             @if($paiement->commande->boutique->adresse) {{ $paiement->commande->boutique->adresse }} @endif

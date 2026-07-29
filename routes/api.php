@@ -110,6 +110,11 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('boutiques', BoutiqueController::class)
             ->only(['index', 'store', 'show', 'update', 'destroy']);
 
+        // Logo de la boutique (affiche sur factures/recus). Meme autorisation
+        // que la mise a jour de la boutique (Policy "update", Gerant).
+        Route::post('/boutiques/{boutique}/logo', [BoutiqueController::class, 'uploaderLogo']);
+        Route::delete('/boutiques/{boutique}/logo', [BoutiqueController::class, 'supprimerLogo']);
+
         // --- Espace Super Admin ---
         // Uniquement les actions reellement reservees au Super Admin :
         // suspendre/reactiver/supprimer une boutique, statistiques globales,

@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class BoutiqueController extends Controller
 {
@@ -91,6 +92,44 @@ class BoutiqueController extends Controller
         $this->journaliser('boutique.configuree', $boutique);
 
         return response()->json($boutique);
+    }
+
+    /**
+     * Logo de la boutique, affiche sur factures/recus (meme autorisation
+     * que "update", cf. Tableau 6 "Configurer boutique" = Gerant).
+     * Remplace l'ancien fichier s'il existe deja.
+     */
+    public function uploaderLogo(Request $request, Boutique $boutique): JsonResponse
+    {
+        $this->authorize('update', $boutique);
+
+        $donnees = $request->validate([
+            'logo' => ['required', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+        ]);
+
+        if ($boutique->logo) {
+            Storage::disk('public')->delete($boutique->logo);
+        }
+
+        $chemin = $donnees['logo']->store('logos', 'public');
+        $boutique->update(['logo' => $chemin]);
+
+        $this->journaliser('boutique.logo_modifie', $boutique);
+
+        return response()->json($boutique->fresh());
+    }
+
+    public function supprimerLogo(Boutique $boutique): JsonResponse
+    {
+        $this->authorize('update', $boutique);
+
+        if ($boutique->logo) {
+            Storage::disk('public')->delete($boutique->logo);
+            $boutique->update(['logo' => null]);
+            $this->journaliser('boutique.logo_supprime', $boutique);
+        }
+
+        return response()->json($boutique->fresh());
     }
 
     /**
