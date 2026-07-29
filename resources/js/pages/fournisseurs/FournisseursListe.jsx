@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
+import { IconLivraison, IconCauri, PastilleIcone, EmptyState } from '../../components/illustrations/Illustrations';
 
 export default function FournisseursListe() {
   const { user } = useAuth();
@@ -14,8 +15,6 @@ export default function FournisseursListe() {
   const [detteSeulement, setDetteSeulement] = useState(false);
   const [erreur, setErreur] = useState('');
 
-  // Tableau 6 du mémoire : "Créer fournisseur, Enregistrer livraison, Gérer dette
-  // fournisseur" = Gérant + Gestionnaire uniquement.
   const peutGererFournisseurs = ['gerant', 'gestionnaire'].includes(user?.role?.nom);
 
   const charger = () => {
@@ -24,7 +23,6 @@ export default function FournisseursListe() {
       .catch(() => setErreur("Impossible de charger les fournisseurs."));
   };
 
-  // Recharge quand la boutique active change (sélecteur multi-points-de-vente).
   useEffect(charger, [boutiqueActiveId]);
 
   const fournisseursFiltres = (fournisseurs || []).filter((f) => {
@@ -82,17 +80,26 @@ export default function FournisseursListe() {
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Total fournisseurs</p>
-          <p className="font-mono text-2xl font-semibold text-ink900">{fournisseurs?.length ?? '—'}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Total fournisseurs</p>
+            <p className="font-mono text-2xl font-semibold text-ink900">{fournisseurs?.length ?? '—'}</p>
+          </div>
+          <PastilleIcone tone="indigo" icon={<IconLivraison className="w-5 h-5" />} />
         </div>
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Avec dette</p>
-          <p className="font-mono text-2xl font-semibold text-danger">{fournisseursAvecDette}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Avec dette</p>
+            <p className="font-mono text-2xl font-semibold text-danger">{fournisseursAvecDette}</p>
+          </div>
+          <PastilleIcone tone="danger" icon={<IconLivraison className="w-5 h-5" />} />
         </div>
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Total dû</p>
-          <p className="font-mono text-2xl font-semibold text-danger">{formatMontant(totalDettes)}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Total dû</p>
+            <p className="font-mono text-2xl font-semibold text-danger">{formatMontant(totalDettes)}</p>
+          </div>
+          <PastilleIcone tone="danger" icon={<IconCauri className="w-5 h-5" />} />
         </div>
       </div>
 
@@ -151,8 +158,19 @@ export default function FournisseursListe() {
 
             {fournisseurs && fournisseursFiltres.length === 0 && (
               <tr>
-                <td colSpan={peutGererFournisseurs ? 6 : 5} className="px-5 py-10 text-center text-ink900/40">
-                  Aucun fournisseur.
+                <td colSpan={peutGererFournisseurs ? 6 : 5}>
+                  <EmptyState
+                    icon={<IconLivraison />}
+                    title="Aucun fournisseur"
+                    subtitle="Enregistre tes fournisseurs pour suivre les livraisons et les dettes."
+                    action={
+                      peutGererFournisseurs && (
+                        <Link to="/fournisseurs/nouveau" className="text-sm font-medium text-indigo-700 hover:underline">
+                          Ajouter un fournisseur →
+                        </Link>
+                      )
+                    }
+                  />
                 </td>
               </tr>
             )}

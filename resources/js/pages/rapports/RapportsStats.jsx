@@ -29,8 +29,6 @@ function versParams(filtres) {
   return { type: 'mois', mois: filtres.mois, annee: filtres.annee };
 }
 
-// Libellés d'axe : ajoute l'année en suffixe si les données couvrent plusieurs années
-// (ex. periode personnalisée juin 2025 -> mars 2026), sinon juste le mois.
 function libellesMois(data) {
   const anneesDistinctes = new Set(data.map((d) => d.annee));
   return data.map((d) =>
@@ -40,7 +38,6 @@ function libellesMois(data) {
   );
 }
 
-// Génère un chemin SVG en courbe lissée (Catmull-Rom -> Bézier) à partir de points {x, y}
 function genererCourbeLissee(points) {
   if (points.length < 2) return '';
   const d = [`M ${points[0].x} ${points[0].y}`];
@@ -58,7 +55,7 @@ function genererCourbeLissee(points) {
   return d.join(' ');
 }
 
-function GraphiqueCourbe({ valeurs, labels, couleur, formatValeur, hauteur = 180 }) {
+function GraphiqueCourbe({ valeurs, labels, couleur, formatValeur, hauteur = 180, id }) {
   const largeur = 600;
   const padding = 24;
   const paddingBas = 28;
@@ -75,6 +72,7 @@ function GraphiqueCourbe({ valeurs, labels, couleur, formatValeur, hauteur = 180
   const min = Math.min(...valeurs, 0);
   const echelle = max - min || 1;
   const step = valeurs.length > 1 ? (largeur - padding * 2) / (valeurs.length - 1) : 0;
+  const gradId = `deg-${id}`;
 
   const points = valeurs.map((v, i) => ({
     x: padding + i * step,
@@ -86,7 +84,22 @@ function GraphiqueCourbe({ valeurs, labels, couleur, formatValeur, hauteur = 180
 
   return (
     <svg viewBox={`0 0 ${largeur} ${hauteur}`} className="w-full" style={{ height: hauteur }}>
-      <path d={cheminAire} fill={couleur} fillOpacity="0.08" />
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={couleur} stopOpacity="0.22" />
+          <stop offset="100%" stopColor={couleur} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {[0.25, 0.5, 0.75].map((f) => (
+        <line
+          key={f}
+          x1={padding} x2={largeur - padding}
+          y1={padding + f * (hauteur - paddingBas - padding)}
+          y2={padding + f * (hauteur - paddingBas - padding)}
+          stroke="currentColor" className="text-ink900/5" strokeWidth="1"
+        />
+      ))}
+      <path d={cheminAire} fill={`url(#${gradId})`} />
       <path d={cheminLigne} fill="none" stroke={couleur} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       {points.map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r="4" fill="white" stroke={couleur} strokeWidth="2.5">
@@ -112,8 +125,6 @@ export default function RapportsStats() {
   const [filtres, setFiltres] = useState(filtresParDefaut());
   const [filtresAppliques, setFiltresAppliques] = useState(filtresParDefaut());
 
-  // Tableau 6 du mémoire : "Générer rapports et statistiques" / "Exporter
-  // rapport PDF" = Gérant uniquement.
   const estGerant = user?.role?.nom === 'gerant';
 
   useEffect(() => {
@@ -299,6 +310,7 @@ export default function RapportsStats() {
           <h2 className="font-display font-semibold text-ink900 mb-1">Chiffre d'affaires mensuel</h2>
           <p className="text-xs text-ink900/40 mb-4">Depuis janvier {anneeGraphique}</p>
           <GraphiqueCourbe
+            id="ca"
             valeurs={(stats?.ca_mensuel ?? []).map((m) => m.total)}
             labels={libellesMois(stats?.ca_mensuel ?? [])}
             couleur="#4338ca"
@@ -310,6 +322,7 @@ export default function RapportsStats() {
           <h2 className="font-display font-semibold text-ink900 mb-1">Nombre de ventes</h2>
           <p className="text-xs text-ink900/40 mb-4">Depuis janvier {anneeGraphique}</p>
           <GraphiqueCourbe
+            id="ventes"
             valeurs={(stats?.ventes_mensuel ?? []).map((m) => m.nombre)}
             labels={libellesMois(stats?.ventes_mensuel ?? [])}
             couleur="#15803d"

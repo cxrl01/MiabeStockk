@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
+import { IconCageot, IconCategorie, PastilleIcone, EmptyState } from '../../components/illustrations/Illustrations';
 
 export default function ProduitsListe() {
   const { user } = useAuth();
@@ -22,8 +23,6 @@ export default function ProduitsListe() {
   const [resultatImport, setResultatImport] = useState(null);
   const [telechargementModele, setTelechargementModele] = useState(false);
 
-  // Tableau 6 du mémoire : "Ajouter/Modifier/Supprimer produit" = Gérant + Gestionnaire
-  // uniquement. Le Commercial a "Consulter stock" (lecture seule).
   const peutGererStock = ['gerant', 'gestionnaire'].includes(user?.role?.nom);
 
   const charger = () => {
@@ -36,8 +35,6 @@ export default function ProduitsListe() {
     api.get('/categories').then(({ data }) => setCategories(data));
   };
 
-  // Recharge quand la boutique active change (sélecteur multi-points-de-vente
-  // du Gérant) — le backend filtre desormais sur cette boutique uniquement.
   useEffect(charger, [boutiqueActiveId]);
   useEffect(chargerCategories, [boutiqueActiveId]);
 
@@ -63,11 +60,6 @@ export default function ProduitsListe() {
     }
   };
 
-  /**
-   * Téléchargement du modèle Excel — même mécanisme que les factures PDF
-   * (blob via l'instance Axios authentifiée, pas de <a href> direct, pour
-   * éviter le souci de Referer/cookie déjà rencontré sur ces écrans).
-   */
   const telechargerModele = async () => {
     setTelechargementModele(true);
     try {
@@ -110,7 +102,7 @@ export default function ProduitsListe() {
       setErreur(error?.response?.data?.message || "Échec de l'import. Vérifiez le format du fichier.");
     } finally {
       setImportEnCours(false);
-      e.target.value = ''; // permet de réimporter le même fichier si besoin
+      e.target.value = '';
     }
   };
 
@@ -179,17 +171,26 @@ export default function ProduitsListe() {
       )}
 
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Total produits</p>
-          <p className="font-mono text-2xl font-semibold text-ink900">{produits?.length ?? '—'}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Total produits</p>
+            <p className="font-mono text-2xl font-semibold text-ink900">{produits?.length ?? '—'}</p>
+          </div>
+          <PastilleIcone tone="indigo" icon={<IconCageot className="w-5 h-5" />} />
         </div>
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Alertes stock</p>
-          <p className="font-mono text-2xl font-semibold text-danger">{alertes}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Alertes stock</p>
+            <p className="font-mono text-2xl font-semibold text-danger">{alertes}</p>
+          </div>
+          <PastilleIcone tone="danger" icon={<IconCageot className="w-5 h-5" />} />
         </div>
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Valeur stock estimée</p>
-          <p className="font-mono text-2xl font-semibold text-success">{formatMontant(valeurStock)}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Valeur stock estimée</p>
+            <p className="font-mono text-2xl font-semibold text-success">{formatMontant(valeurStock)}</p>
+          </div>
+          <PastilleIcone tone="success" icon={<IconCategorie className="w-5 h-5" />} />
         </div>
       </div>
 
@@ -275,14 +276,26 @@ export default function ProduitsListe() {
 
             {produits && produitsFiltres.length === 0 && (
               <tr>
-                <td colSpan={peutGererStock ? 7 : 6} className="px-5 py-10 text-center text-ink900/40">Aucun produit.</td>
+                <td colSpan={peutGererStock ? 7 : 6}>
+                  <EmptyState
+                    icon={<IconCageot />}
+                    title="Aucun produit"
+                    subtitle="Ajoute un premier produit, ou importe ton catalogue depuis Excel."
+                    action={
+                      peutGererStock && (
+                        <Link to="/stock/nouveau" className="text-sm font-medium text-indigo-700 hover:underline">
+                          Ajouter un produit →
+                        </Link>
+                      )
+                    }
+                  />
+                </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Résultat de l'import */}
       {resultatImport && (
         <div className="fixed inset-0 bg-ink900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-surface rounded-xl border border-ink900/10 p-6 max-w-md w-full">

@@ -153,7 +153,7 @@ export default function NouvelleLivraison() {
               <select
                 value={fournisseurId}
                 onChange={(e) => setFournisseurId(e.target.value)}
-                className="flex-1 rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm
+                className="flex-1 rounded-lg border border-ink900/15 bg-surface px-3 py-2.5 text-sm
                   focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
               >
                 <option value="">Sélectionner un fournisseur</option>
@@ -194,7 +194,7 @@ export default function NouvelleLivraison() {
                   <select
                     value={ligne.produit_id}
                     onChange={(e) => majLigne(index, 'produit_id', e.target.value)}
-                    className="flex-1 rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm
+                    className="flex-1 rounded-lg border border-ink900/15 bg-surface px-3 py-2.5 text-sm
                       focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
                   >
                     {produits.map((p) => (
@@ -207,7 +207,7 @@ export default function NouvelleLivraison() {
                     value={ligne.quantite}
                     onChange={(e) => majLigne(index, 'quantite', e.target.value)}
                     placeholder="Qté"
-                    className="w-20 rounded-lg border border-ink900/15 bg-white px-2 py-2.5 text-sm text-center
+                    className="w-20 rounded-lg border border-ink900/15 bg-surface px-2 py-2.5 text-sm text-center
                       focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
                   />
                   <input
@@ -217,7 +217,7 @@ export default function NouvelleLivraison() {
                     value={ligne.prix_unitaire}
                     onChange={(e) => majLigne(index, 'prix_unitaire', e.target.value)}
                     placeholder="Prix achat"
-                    className="w-28 rounded-lg border border-ink900/15 bg-white px-2 py-2.5 text-sm text-right
+                    className="w-28 rounded-lg border border-ink900/15 bg-surface px-2 py-2.5 text-sm text-right
                       focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
                   />
                   <span className="w-24 text-right font-mono text-sm text-ink900/70 shrink-0">
@@ -246,7 +246,7 @@ export default function NouvelleLivraison() {
             <select
               value={modePaiement}
               onChange={(e) => setModePaiement(e.target.value)}
-              className="w-full rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm mb-4
+              className="w-full rounded-lg border border-ink900/15 bg-surface px-3 py-2.5 text-sm mb-4
                 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
             >
               {MODES_PAIEMENT.map((m) => (
@@ -272,7 +272,7 @@ export default function NouvelleLivraison() {
               value={montantPaye}
               readOnly={payerTotalite}
               onChange={(e) => setMontantPaye(e.target.value)}
-              className="w-full rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm
+              className="w-full rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm
                 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600
                 read-only:bg-ink900/[0.03]"
             />

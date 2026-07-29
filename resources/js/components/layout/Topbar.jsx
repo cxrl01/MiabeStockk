@@ -65,7 +65,7 @@ export default function Topbar({ title, onToggleSidebar, onToggleMobileSidebar }
 
       <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         {estGerantMulti && (
-          <div className="hidden md:flex items-center gap-2 rounded-lg border border-ink900/15 bg-white px-2.5 py-1.5">
+          <div className="hidden md:flex items-center gap-2 rounded-lg border border-ink900/15 bg-surface px-2.5 py-1.5">
             <span className="text-ink900/40">
               <IconBox />
             </span>

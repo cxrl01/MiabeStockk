@@ -201,7 +201,7 @@ export default function NouvelleVente() {
             placeholder="Rechercher un produit (nom ou référence)..."
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
-            className="w-full rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm mb-4
+            className="w-full rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm mb-4
               focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
           />
 
@@ -234,7 +234,7 @@ export default function NouvelleVente() {
             <select
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
-              className="flex-1 rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm
+              className="flex-1 rounded-lg border border-ink900/15 bg-surface px-3 py-2.5 text-sm
                 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
             >
               <option value="">— Client anonyme —</option>
@@ -298,7 +298,7 @@ export default function NouvelleVente() {
           <select
             value={modePaiement}
             onChange={(e) => setModePaiement(e.target.value)}
-            className="w-full rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm mb-4
+            className="w-full rounded-lg border border-ink900/15 bg-surface px-3 py-2.5 text-sm mb-4
               focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
           >
             {MODES_PAIEMENT.map((m) => (
@@ -324,7 +324,7 @@ export default function NouvelleVente() {
             value={montantPaye}
             readOnly={payerTotalite}
             onChange={(e) => setMontantPaye(e.target.value)}
-            className="w-full rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm mb-1
+            className="w-full rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm mb-1
               focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600
               read-only:bg-ink900/[0.03]"
           />

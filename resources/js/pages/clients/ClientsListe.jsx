@@ -6,6 +6,7 @@ import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
 import { lienRelanceWhatsapp } from '../../lib/whatsapp';
+import { IconSilhouette, IconCauri, PastilleIcone, EmptyState } from '../../components/illustrations/Illustrations';
 
 export default function ClientsListe() {
   const { user } = useAuth();
@@ -15,8 +16,6 @@ export default function ClientsListe() {
   const [detteSeulement, setDetteSeulement] = useState(false);
   const [erreur, setErreur] = useState('');
 
-  // Nom de la boutique ACTIVE (pas systematiquement la premiere boutique geree)
-  // pour personnaliser le message WhatsApp de relance.
   const boutiqueActiveObjet = boutiquesGerees.find((b) => b.id === boutiqueActiveId);
   const boutiqueNom = user?.boutique?.nom || boutiqueActiveObjet?.nom || 'notre boutique';
 
@@ -26,7 +25,6 @@ export default function ClientsListe() {
       .catch(() => setErreur("Impossible de charger les clients."));
   };
 
-  // Recharge quand la boutique active change (sélecteur multi-points-de-vente).
   useEffect(charger, [boutiqueActiveId]);
 
   const clientsFiltres = (clients || []).filter((c) => {
@@ -73,17 +71,26 @@ export default function ClientsListe() {
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Total clients</p>
-          <p className="font-mono text-2xl font-semibold text-ink900">{clients?.length ?? '—'}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Total clients</p>
+            <p className="font-mono text-2xl font-semibold text-ink900">{clients?.length ?? '—'}</p>
+          </div>
+          <PastilleIcone tone="indigo" icon={<IconSilhouette className="w-5 h-5" />} />
         </div>
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Clients avec dette</p>
-          <p className="font-mono text-2xl font-semibold text-danger">{clientsAvecDette}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Clients avec dette</p>
+            <p className="font-mono text-2xl font-semibold text-danger">{clientsAvecDette}</p>
+          </div>
+          <PastilleIcone tone="danger" icon={<IconSilhouette className="w-5 h-5" />} />
         </div>
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Total dettes</p>
-          <p className="font-mono text-2xl font-semibold text-danger">{formatMontant(totalDettes)}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Total dettes</p>
+            <p className="font-mono text-2xl font-semibold text-danger">{formatMontant(totalDettes)}</p>
+          </div>
+          <PastilleIcone tone="danger" icon={<IconCauri className="w-5 h-5" />} />
         </div>
       </div>
 
@@ -175,7 +182,18 @@ export default function ClientsListe() {
         })}
 
         {clients && clientsFiltres.length === 0 && (
-          <p className="col-span-full text-center text-ink900/40 py-10">Aucun client.</p>
+          <div className="col-span-full">
+            <EmptyState
+              icon={<IconSilhouette />}
+              title="Aucun client"
+              subtitle="Chaque client enregistré ici pourra être relancé sur WhatsApp en cas de dette."
+              action={
+                <Link to="/clients/nouveau" className="text-sm font-medium text-indigo-700 hover:underline">
+                  Ajouter un client →
+                </Link>
+              }
+            />
+          </div>
         )}
       </div>
     </AppShell>

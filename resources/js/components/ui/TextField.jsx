@@ -10,7 +10,7 @@ export default function TextField({ label, id, error, hint, className = '', ...p
           id={id}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
-          className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm font-sans
+          className={`w-full rounded-lg border bg-surface px-3.5 py-2.5 text-sm font-sans
             placeholder:text-ink900/35 transition-colors
             ${error ? 'border-danger' : 'border-ink900/15 focus:border-indigo-600'}
             focus:outline-none focus:ring-2 focus:ring-offset-0

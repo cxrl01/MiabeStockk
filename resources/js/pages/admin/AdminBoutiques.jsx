@@ -145,7 +145,7 @@ export default function AdminBoutiques() {
               placeholder="Rechercher…"
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
-              className="rounded-lg border border-ink900/15 bg-white px-3 py-1.5 text-sm
+              className="rounded-lg border border-ink900/15 bg-surface px-3 py-1.5 text-sm
                 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
             />
           </div>

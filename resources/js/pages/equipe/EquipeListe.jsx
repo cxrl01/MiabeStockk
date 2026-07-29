@@ -4,6 +4,7 @@ import AppShell from '../../components/layout/AppShell';
 import { useAuth } from '../../hooks/useAuth';
 import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
+import { IconSilhouette, PastilleIcone, EmptyState } from '../../components/illustrations/Illustrations';
 
 const LABELS_ROLE = {
   gestionnaire: 'Gestionnaire',
@@ -17,10 +18,6 @@ export default function EquipeListe() {
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
 
-  // Tableau 6 du mémoire : "Ajouter/Modifier/Supprimer compte employé" = Gérant
-  // uniquement. Cette page n'est même pas censée être accessible à un autre rôle
-  // (route protégée côté AppRoutes.jsx), mais on masque aussi les actions ici en
-  // défense supplémentaire.
   const estGerant = user?.role?.nom === 'gerant';
 
   const charger = () => {
@@ -29,8 +26,6 @@ export default function EquipeListe() {
       .catch(() => setErreur("Impossible de charger l'équipe."));
   };
 
-  // Recharge la liste quand la boutique active change (sélecteur multi-points-
-  // de-vente) : le backend filtre desormais sur cette boutique uniquement.
   useEffect(charger, [boutiqueActiveId]);
 
   const employesFiltres = (employes || []).filter((e) =>
@@ -82,15 +77,21 @@ export default function EquipeListe() {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4 mb-6">
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Total membres</p>
-          <p className="font-mono text-2xl font-semibold text-ink900">{employes?.length ?? '—'}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Total membres</p>
+            <p className="font-mono text-2xl font-semibold text-ink900">{employes?.length ?? '—'}</p>
+          </div>
+          <PastilleIcone tone="indigo" icon={<IconSilhouette className="w-5 h-5" />} />
         </div>
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Actifs</p>
-          <p className="font-mono text-2xl font-semibold text-success">
-            {(employes || []).filter((e) => e.actif).length}
-          </p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Actifs</p>
+            <p className="font-mono text-2xl font-semibold text-success">
+              {(employes || []).filter((e) => e.actif).length}
+            </p>
+          </div>
+          <PastilleIcone tone="success" icon={<IconSilhouette className="w-5 h-5" />} />
         </div>
       </div>
 
@@ -143,7 +144,18 @@ export default function EquipeListe() {
 
             {employes && employesFiltres.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-ink900/40">Aucun membre.</td>
+                <td colSpan={6}>
+                  <EmptyState
+                    icon={<IconSilhouette />}
+                    title="Aucun membre"
+                    subtitle="Ajoute les comptes de ton équipe : gestionnaires et commerciaux."
+                    action={
+                      <Link to="/equipe/nouveau" className="text-sm font-medium text-indigo-700 hover:underline">
+                        Ajouter un membre →
+                      </Link>
+                    }
+                  />
+                </td>
               </tr>
             )}
           </tbody>

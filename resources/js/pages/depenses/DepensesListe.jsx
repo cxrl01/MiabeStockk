@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 import { formatMontant, formatDate } from '../../lib/format';
+import { IconBourse, PastilleIcone, EmptyState } from '../../components/illustrations/Illustrations';
 
 export default function DepensesListe() {
   const { user } = useAuth();
@@ -14,8 +15,6 @@ export default function DepensesListe() {
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
 
-  // Tableau 6 du mémoire : "Enregistrer dépense, Consulter trésorerie" =
-  // Gérant + Gestionnaire uniquement.
   const peutGererDepenses = ['gerant', 'gestionnaire'].includes(user?.role?.nom);
 
   const charger = () => {
@@ -28,7 +27,6 @@ export default function DepensesListe() {
       .catch(() => {});
   };
 
-  // Recharge quand la boutique active change (sélecteur multi-points-de-vente).
   useEffect(charger, [boutiqueActiveId]);
 
   const depensesFiltrees = (depenses || []).filter((d) =>
@@ -80,17 +78,23 @@ export default function DepensesListe() {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4 mb-6">
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Total dépenses (mois en cours)</p>
-          <p className="font-mono text-2xl font-semibold text-ink900">
-            {tresorerie ? formatMontant(tresorerie.total_depenses) : '—'}
-          </p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Total dépenses (mois en cours)</p>
+            <p className="font-mono text-2xl font-semibold text-ink900">
+              {tresorerie ? formatMontant(tresorerie.total_depenses) : '—'}
+            </p>
+          </div>
+          <PastilleIcone tone="danger" icon={<IconBourse className="w-5 h-5" />} />
         </div>
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Nombre d'opérations</p>
-          <p className="font-mono text-2xl font-semibold text-ink900">
-            {tresorerie ? tresorerie.nombre_operations : '—'}
-          </p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Nombre d'opérations</p>
+            <p className="font-mono text-2xl font-semibold text-ink900">
+              {tresorerie ? tresorerie.nombre_operations : '—'}
+            </p>
+          </div>
+          <PastilleIcone tone="indigo" icon={<IconBourse className="w-5 h-5" />} />
         </div>
       </div>
 
@@ -150,7 +154,18 @@ export default function DepensesListe() {
 
             {depenses && depensesFiltrees.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-ink900/40">Aucune dépense.</td>
+                <td colSpan={6}>
+                  <EmptyState
+                    icon={<IconBourse />}
+                    title="Aucune dépense enregistrée"
+                    subtitle="Chaque sortie d'argent viendra alimenter ta trésorerie ici."
+                    action={
+                      <Link to="/depenses/nouvelle" className="text-sm font-medium text-indigo-700 hover:underline">
+                        Ajouter une dépense →
+                      </Link>
+                    }
+                  />
+                </td>
               </tr>
             )}
           </tbody>

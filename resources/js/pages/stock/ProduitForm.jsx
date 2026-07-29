@@ -144,7 +144,7 @@ export default function ProduitForm() {
                   id="categorie_id"
                   value={form.categorie_id}
                   onChange={majChamp('categorie_id')}
-                  className="flex-1 rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm
+                  className="flex-1 rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm
                     focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
                 >
                   <option value="">Aucune</option>

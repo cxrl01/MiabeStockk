@@ -163,7 +163,7 @@ export default function Administration() {
             <select
               value={boutiqueActiveId}
               onChange={(e) => changerBoutiqueActive(e.target.value)}
-              className="w-full rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm
+              className="w-full rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm
                 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
             >
               {boutiques.map((b) => (

@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useBoutiqueActive } from '../../hooks/useBoutiqueActive';
 import api from '../../services/api';
 import { formatMontant, formatDate } from '../../lib/format';
+import { IconCauri, IconRecu, PastilleIcone, EmptyState } from '../../components/illustrations/Illustrations';
 
 export default function VentesListe() {
   const { user } = useAuth();
@@ -95,17 +96,26 @@ export default function VentesListe() {
 
       {/* Stats */}
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Total ventes</p>
-          <p className="font-mono text-2xl font-semibold text-ink900">{totalVentes}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Total ventes</p>
+            <p className="font-mono text-2xl font-semibold text-ink900">{totalVentes}</p>
+          </div>
+          <PastilleIcone tone="indigo" icon={<IconRecu className="w-5 h-5" />} />
         </div>
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Chiffre affiché</p>
-          <p className="font-mono text-2xl font-semibold text-success">{formatMontant(chiffreAffiche)}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Chiffre affiché</p>
+            <p className="font-mono text-2xl font-semibold text-success">{formatMontant(chiffreAffiche)}</p>
+          </div>
+          <PastilleIcone tone="success" icon={<IconCauri className="w-5 h-5" />} />
         </div>
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <p className="text-sm text-ink900/50 mb-2">Dettes actives</p>
-          <p className="font-mono text-2xl font-semibold text-danger">{dettesActives}</p>
+        <div className="bg-surface rounded-xl border border-ink900/10 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-ink900/50 mb-2">Dettes actives</p>
+            <p className="font-mono text-2xl font-semibold text-danger">{dettesActives}</p>
+          </div>
+          <PastilleIcone tone="danger" icon={<IconCauri className="w-5 h-5" />} />
         </div>
       </div>
 
@@ -164,8 +174,22 @@ export default function VentesListe() {
 
             {ventes && ventesFiltrees.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-5 py-10 text-center text-ink900/40">
-                  Aucune vente pour l'instant.
+                <td colSpan={7}>
+                  <EmptyState
+                    icon={<IconRecu />}
+                    title="Aucune vente pour l'instant"
+                    subtitle="Les transactions encaissées apparaîtront ici, réf par réf."
+                    action={
+                      peutVendre && (
+                        <Link
+                          to="/ventes/nouvelle"
+                          className="text-sm font-medium text-indigo-700 hover:underline"
+                        >
+                          Enregistrer la première vente →
+                        </Link>
+                      )
+                    }
+                  />
                 </td>
               </tr>
             )}

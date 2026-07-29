@@ -6,18 +6,7 @@ import Badge from '../components/ui/Badge';
 import api from '../services/api';
 import { formatMontant, formatHeure } from '../lib/format';
 import { IconCart, IconWallet, IconUsers, IconAlertTriangle } from '../components/layout/Icons';
-
-/**
- * Ce fichier est aligne EXACTEMENT sur la reponse actuelle de DashboardController::index() :
- * ventes_jour, ca_jour, ca_mois, total_clients, depenses_mois, produits_en_alerte,
- * dernieres_ventes[], alertes_stock[], et comparatif_boutiques[] (uniquement present si
- * le Gerant possede plusieurs boutiques — cf. memoire, "tableau de bord consolide").
- *
- * Ce tableau de bord est TOUJOURS consolide (toutes les boutiques du Gerant), pas
- * filtre par boutique active — contrairement aux ecrans operationnels (Stock, Ventes,
- * Clients...). Pas de dependance sur boutiqueActiveId ici : changer de boutique dans
- * le selecteur ne doit pas modifier ce que montre le Dashboard.
- */
+import { IconRecu, EmptyState } from '../components/illustrations/Illustrations';
 
 export default function Dashboard() {
   const [d, setD] = useState(null);
@@ -38,7 +27,6 @@ export default function Dashboard() {
         </p>
       )}
 
-      {/* Cartes stats : uniquement les valeurs que le backend fournit reellement */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           label="Ventes"
@@ -72,7 +60,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Comparatif par boutique — uniquement pour un Gerant multi-points-de-vente */}
       {d?.comparatif_boutiques?.length > 1 && (
         <div className="bg-surface rounded-xl border border-ink900/10 overflow-x-auto mb-6">
           <div className="px-5 py-4 border-b border-ink900/10">
@@ -109,7 +96,6 @@ export default function Dashboard() {
       )}
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Dernieres ventes */}
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -157,13 +143,13 @@ export default function Dashboard() {
               })}
             </div>
           ) : (
-            <p className="text-sm text-ink900/40 py-6 text-center">
-              Les dernières ventes apparaîtront ici dès vos premières transactions.
-            </p>
+            <EmptyState
+              icon={<IconRecu />}
+              title="Les dernières ventes apparaîtront ici dès vos premières transactions."
+            />
           )}
         </div>
 
-        {/* Alertes stock */}
         <div className="bg-surface rounded-xl border border-ink900/10 p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
