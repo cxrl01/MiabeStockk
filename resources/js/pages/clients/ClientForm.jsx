@@ -61,50 +61,61 @@ export default function ClientForm() {
 
   return (
     <AppShell title={modeEdition ? 'Modifier le client' : 'Nouveau client'}>
-      <form onSubmit={soumettre} className="max-w-lg space-y-5">
-        <TextField
-          id="nom"
-          label="Nom complet"
-          value={form.nom}
-          onChange={majChamp('nom')}
-          error={erreurs.nom}
-          required
-        />
-        <TextField
-          id="telephone"
-          type="tel"
-          label="Téléphone"
-          value={form.telephone}
-          onChange={majChamp('telephone')}
-          error={erreurs.telephone}
-        />
-        <TextField
-          id="adresse"
-          label="Adresse"
-          value={form.adresse}
-          onChange={majChamp('adresse')}
-          error={erreurs.adresse}
-        />
-
-        {erreurGenerale && (
-          <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
-            {erreurGenerale}
+      <div className="max-w-xl mx-auto">
+        <div className="bg-surface rounded-xl border border-ink900/10 p-6 sm:p-8">
+          <h2 className="font-display font-semibold text-xl text-ink900 mb-1">
+            {modeEdition ? 'Modifier le client' : 'Nouveau client'}
+          </h2>
+          <p className="text-sm text-ink900/50 mb-6">
+            {modeEdition ? 'Modifiez les informations de ce client' : 'Ajoutez un client à votre carnet'}
           </p>
-        )}
 
-        <div className="flex gap-3">
-          <Button type="submit" variant="boutique" loading={chargement}>
-            {modeEdition ? 'Enregistrer' : 'Créer le client'}
-          </Button>
-          <button
-            type="button"
-            onClick={() => navigate('/clients')}
-            className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
-          >
-            Annuler
-          </button>
+          <form onSubmit={soumettre} className="space-y-5">
+            <TextField
+              id="nom"
+              label="Nom complet"
+              value={form.nom}
+              onChange={majChamp('nom')}
+              error={erreurs.nom}
+              required
+            />
+            <TextField
+              id="telephone"
+              type="tel"
+              label="Téléphone"
+              value={form.telephone}
+              onChange={majChamp('telephone')}
+              error={erreurs.telephone}
+            />
+            <TextField
+              id="adresse"
+              label="Adresse"
+              value={form.adresse}
+              onChange={majChamp('adresse')}
+              error={erreurs.adresse}
+            />
+
+            {erreurGenerale && (
+              <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
+                {erreurGenerale}
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <Button type="submit" variant="boutique" loading={chargement}>
+                {modeEdition ? 'Enregistrer' : 'Créer le client'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => navigate('/clients')}
+                className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </AppShell>
   );
 }

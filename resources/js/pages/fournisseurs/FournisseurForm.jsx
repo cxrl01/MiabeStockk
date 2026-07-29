@@ -68,57 +68,68 @@ export default function FournisseurForm() {
 
   return (
     <AppShell title={modeEdition ? 'Modifier le fournisseur' : 'Ajouter un fournisseur'}>
-      <form onSubmit={soumettre} className="max-w-lg space-y-5">
-        <TextField
-          id="nom"
-          label="Nom du fournisseur"
-          value={form.nom}
-          onChange={majChamp('nom')}
-          error={erreurs.nom}
-          required
-        />
-        <TextField
-          id="telephone"
-          label="Téléphone (optionnel)"
-          value={form.telephone}
-          onChange={majChamp('telephone')}
-          error={erreurs.telephone}
-        />
-        <TextField
-          id="adresse"
-          label="Adresse (optionnel)"
-          value={form.adresse}
-          onChange={majChamp('adresse')}
-          error={erreurs.adresse}
-        />
-        <TextField
-          id="conditions_paiement"
-          label="Conditions de paiement (optionnel)"
-          placeholder="Ex : 30 jours, Comptant..."
-          value={form.conditions_paiement}
-          onChange={majChamp('conditions_paiement')}
-          error={erreurs.conditions_paiement}
-        />
-
-        {erreurGenerale && (
-          <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
-            {erreurGenerale}
+      <div className="max-w-xl mx-auto">
+        <div className="bg-surface rounded-xl border border-ink900/10 p-6 sm:p-8">
+          <h2 className="font-display font-semibold text-xl text-ink900 mb-1">
+            {modeEdition ? 'Modifier le fournisseur' : 'Ajouter un fournisseur'}
+          </h2>
+          <p className="text-sm text-ink900/50 mb-6">
+            {modeEdition ? 'Modifiez les informations de ce fournisseur' : 'Enregistrez un nouveau partenaire'}
           </p>
-        )}
 
-        <div className="flex gap-3">
-          <Button type="submit" variant="boutique" loading={chargement}>
-            {modeEdition ? 'Enregistrer' : 'Créer le fournisseur'}
-          </Button>
-          <button
-            type="button"
-            onClick={() => navigate('/fournisseurs')}
-            className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
-          >
-            Annuler
-          </button>
+          <form onSubmit={soumettre} className="space-y-5">
+            <TextField
+              id="nom"
+              label="Nom du fournisseur"
+              value={form.nom}
+              onChange={majChamp('nom')}
+              error={erreurs.nom}
+              required
+            />
+            <TextField
+              id="telephone"
+              label="Téléphone (optionnel)"
+              value={form.telephone}
+              onChange={majChamp('telephone')}
+              error={erreurs.telephone}
+            />
+            <TextField
+              id="adresse"
+              label="Adresse (optionnel)"
+              value={form.adresse}
+              onChange={majChamp('adresse')}
+              error={erreurs.adresse}
+            />
+            <TextField
+              id="conditions_paiement"
+              label="Conditions de paiement (optionnel)"
+              placeholder="Ex : 30 jours, Comptant..."
+              value={form.conditions_paiement}
+              onChange={majChamp('conditions_paiement')}
+              error={erreurs.conditions_paiement}
+            />
+
+            {erreurGenerale && (
+              <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
+                {erreurGenerale}
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <Button type="submit" variant="boutique" loading={chargement}>
+                {modeEdition ? 'Enregistrer' : 'Créer le fournisseur'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => navigate('/fournisseurs')}
+                className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </AppShell>
   );
 }

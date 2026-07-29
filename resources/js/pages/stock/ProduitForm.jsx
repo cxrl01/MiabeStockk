@@ -116,121 +116,132 @@ export default function ProduitForm() {
 
   return (
     <AppShell title={modeEdition ? 'Modifier le produit' : 'Ajouter un produit'}>
-      <form onSubmit={soumettre} className="max-w-lg space-y-5">
-        <TextField
-          id="nom"
-          label="Nom du produit"
-          value={form.nom}
-          onChange={majChamp('nom')}
-          error={erreurs.nom}
-          required
-        />
-
-        <div>
-          <label htmlFor="categorie_id" className="block text-sm font-medium text-ink900/80 mb-1.5">
-            Catégorie
-          </label>
-          <div className="flex gap-2">
-            <select
-              id="categorie_id"
-              value={form.categorie_id}
-              onChange={majChamp('categorie_id')}
-              className="flex-1 rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm
-                focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
-            >
-              <option value="">Aucune</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.nom}</option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={ouvrirModaleCategorie}
-              title="Créer une nouvelle catégorie"
-              className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-lg border border-ink900/15
-                text-ink900/70 hover:bg-ink900/5 transition-colors"
-            >
-              +
-            </button>
-          </div>
-          {erreurs.categorie_id && (
-            <p className="text-sm text-danger mt-1.5">{erreurs.categorie_id}</p>
-          )}
-        </div>
-
-        <TextField
-          id="reference"
-          label="Référence (optionnel)"
-          value={form.reference}
-          onChange={majChamp('reference')}
-          error={erreurs.reference}
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <TextField
-            id="prix_achat"
-            type="number"
-            step="0.01"
-            label="Prix d'achat"
-            value={form.prix_achat}
-            onChange={majChamp('prix_achat')}
-            error={erreurs.prix_achat}
-            required
-          />
-          <TextField
-            id="prix_vente"
-            type="number"
-            step="0.01"
-            label="Prix de vente"
-            value={form.prix_vente}
-            onChange={majChamp('prix_vente')}
-            error={erreurs.prix_vente}
-            required
-          />
-        </div>
-
-        {/* Pas de champ TVA ici : la TVA est configurable au niveau de la boutique
-            (Administration > Informations de la boutique), pas par produit. */}
-        <TextField
-          id="seuil_alerte"
-          type="number"
-          label="Seuil d'alerte"
-          value={form.seuil_alerte}
-          onChange={majChamp('seuil_alerte')}
-          error={erreurs.seuil_alerte}
-        />
-
-        {!modeEdition && (
-          <TextField
-            id="quantite_stock"
-            type="number"
-            label="Quantité initiale en stock"
-            value={form.quantite_stock}
-            onChange={majChamp('quantite_stock')}
-            error={erreurs.quantite_stock}
-            hint="Après création, toute variation devra passer par un ajustement tracé."
-          />
-        )}
-
-        {erreurGenerale && (
-          <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
-            {erreurGenerale}
+      <div className="max-w-xl mx-auto">
+        <div className="bg-surface rounded-xl border border-ink900/10 p-6 sm:p-8">
+          <h2 className="font-display font-semibold text-xl text-ink900 mb-1">
+            {modeEdition ? 'Modifier le produit' : 'Ajouter un produit'}
+          </h2>
+          <p className="text-sm text-ink900/50 mb-6">
+            {modeEdition ? 'Modifiez les informations de cet article' : "Renseignez les détails de l'article"}
           </p>
-        )}
 
-        <div className="flex gap-3">
-          <Button type="submit" variant="boutique" loading={chargement}>
-            {modeEdition ? 'Enregistrer' : 'Créer le produit'}
-          </Button>
-          <button
-            type="button"
-            onClick={() => navigate('/stock')}
-            className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
-          >
-            Annuler
-          </button>
+          <form onSubmit={soumettre} className="space-y-5">
+            <TextField
+              id="nom"
+              label="Nom du produit"
+              value={form.nom}
+              onChange={majChamp('nom')}
+              error={erreurs.nom}
+              required
+            />
+
+            <div>
+              <label htmlFor="categorie_id" className="block text-sm font-medium text-ink900/80 mb-1.5">
+                Catégorie
+              </label>
+              <div className="flex gap-2">
+                <select
+                  id="categorie_id"
+                  value={form.categorie_id}
+                  onChange={majChamp('categorie_id')}
+                  className="flex-1 rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm
+                    focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+                >
+                  <option value="">Aucune</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.nom}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={ouvrirModaleCategorie}
+                  title="Créer une nouvelle catégorie"
+                  className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-lg border border-ink900/15
+                    text-ink900/70 hover:bg-ink900/5 transition-colors"
+                >
+                  +
+                </button>
+              </div>
+              {erreurs.categorie_id && (
+                <p className="text-sm text-danger mt-1.5">{erreurs.categorie_id}</p>
+              )}
+            </div>
+
+            <TextField
+              id="reference"
+              label="Référence (optionnel)"
+              value={form.reference}
+              onChange={majChamp('reference')}
+              error={erreurs.reference}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <TextField
+                id="prix_achat"
+                type="number"
+                step="0.01"
+                label="Prix d'achat"
+                value={form.prix_achat}
+                onChange={majChamp('prix_achat')}
+                error={erreurs.prix_achat}
+                required
+              />
+              <TextField
+                id="prix_vente"
+                type="number"
+                step="0.01"
+                label="Prix de vente"
+                value={form.prix_vente}
+                onChange={majChamp('prix_vente')}
+                error={erreurs.prix_vente}
+                required
+              />
+            </div>
+
+            {/* Pas de champ TVA ici : la TVA est configurable au niveau de la boutique
+                (Administration > Informations de la boutique), pas par produit. */}
+            <TextField
+              id="seuil_alerte"
+              type="number"
+              label="Seuil d'alerte"
+              value={form.seuil_alerte}
+              onChange={majChamp('seuil_alerte')}
+              error={erreurs.seuil_alerte}
+            />
+
+            {!modeEdition && (
+              <TextField
+                id="quantite_stock"
+                type="number"
+                label="Quantité initiale en stock"
+                value={form.quantite_stock}
+                onChange={majChamp('quantite_stock')}
+                error={erreurs.quantite_stock}
+                hint="Après création, toute variation devra passer par un ajustement tracé."
+              />
+            )}
+
+            {erreurGenerale && (
+              <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
+                {erreurGenerale}
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <Button type="submit" variant="boutique" loading={chargement}>
+                {modeEdition ? 'Enregistrer' : 'Créer le produit'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => navigate('/stock')}
+                className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
 
       {modaleCategorieOuverte && (
         <div className="fixed inset-0 bg-ink900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">

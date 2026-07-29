@@ -35,7 +35,7 @@ class BoutiquePolicy
             && $user->boutiquesGerees()->where('id', $boutique->id)->exists();
     }
 
-    // Tableau 6 : "Suspendre / Reactiver / Supprimer boutique" = Super Admin
+    // Tableau 6 : "Suspendre / Reactiver boutique" = Super Admin
     // uniquement, sur n'importe quelle boutique de la plateforme.
     public function suspendre(User $user, Boutique $boutique): bool
     {
@@ -47,8 +47,14 @@ class BoutiquePolicy
         return $user->hasRole('super_admin');
     }
 
+    // "Supprimer boutique" = Super Admin sur n'importe quelle boutique, ou
+    // Gerant sur ses propres boutiques. La suppression est un changement de
+    // statut (voir BoutiqueController::destroy()), pas une suppression
+    // physique, donc l'historique reste consultable par le Super Admin
+    // meme apres suppression par le Gerant.
     public function delete(User $user, Boutique $boutique): bool
     {
-        return $user->hasRole('super_admin');
+        return $user->hasRole('super_admin')
+            || ($user->hasRole('gerant') && $user->boutiquesGerees()->where('id', $boutique->id)->exists());
     }
 }

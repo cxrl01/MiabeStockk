@@ -71,67 +71,77 @@ export default function DepenseForm() {
 
   return (
     <AppShell title={modeEdition ? 'Modifier la dépense' : 'Ajouter une dépense'}>
-      <form onSubmit={soumettre} className="max-w-lg space-y-5">
-        <TextField
-          id="libelle"
-          label="Libellé"
-          placeholder="Ex : Loyer boutique — Juillet"
-          value={form.libelle}
-          onChange={majChamp('libelle')}
-          error={erreurs.libelle}
-          required
-        />
-
-        <TextField
-          id="montant"
-          type="number"
-          step="0.01"
-          label="Montant"
-          value={form.montant}
-          onChange={majChamp('montant')}
-          error={erreurs.montant}
-          required
-        />
-
-        <TextField
-          id="categorie"
-          label="Catégorie (optionnel)"
-          placeholder="Ex : Loyer, Salaires, Transport..."
-        //   hint="Ne pas utiliser pour les achats de marchandises : ceux-ci passent par le module Fournisseurs (livraisons), déjà comptés séparément."
-          value={form.categorie}
-          onChange={majChamp('categorie')}
-          error={erreurs.categorie}
-        />
-
-        <TextField
-          id="date_depense"
-          type="date"
-          label="Date de la dépense"
-          value={form.date_depense}
-          onChange={majChamp('date_depense')}
-          error={erreurs.date_depense}
-          required
-        />
-
-        {erreurGenerale && (
-          <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
-            {erreurGenerale}
+      <div className="max-w-xl mx-auto">
+        <div className="bg-surface rounded-xl border border-ink900/10 p-6 sm:p-8">
+          <h2 className="font-display font-semibold text-xl text-ink900 mb-1">
+            {modeEdition ? 'Modifier la dépense' : 'Ajouter une dépense'}
+          </h2>
+          <p className="text-sm text-ink900/50 mb-6">
+            {modeEdition ? 'Modifiez cette sortie de caisse' : 'Suivez vos sorties de caisse'}
           </p>
-        )}
 
-        <div className="flex gap-3">
-          <Button type="submit" variant="boutique" loading={chargement}>
-            {modeEdition ? 'Enregistrer' : 'Créer la dépense'}
-          </Button>
-          <button
-            type="button"
-            onClick={() => navigate('/depenses')}
-            className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
-          >
-            Annuler
-          </button>
+          <form onSubmit={soumettre} className="space-y-5">
+            <TextField
+              id="libelle"
+              label="Libellé"
+              placeholder="Ex : Loyer boutique — Juillet"
+              value={form.libelle}
+              onChange={majChamp('libelle')}
+              error={erreurs.libelle}
+              required
+            />
+
+            <TextField
+              id="montant"
+              type="number"
+              step="0.01"
+              label="Montant"
+              value={form.montant}
+              onChange={majChamp('montant')}
+              error={erreurs.montant}
+              required
+            />
+
+            <TextField
+              id="categorie"
+              label="Catégorie (optionnel)"
+              placeholder="Ex : Loyer, Salaires, Transport..."
+              value={form.categorie}
+              onChange={majChamp('categorie')}
+              error={erreurs.categorie}
+            />
+
+            <TextField
+              id="date_depense"
+              type="date"
+              label="Date de la dépense"
+              value={form.date_depense}
+              onChange={majChamp('date_depense')}
+              error={erreurs.date_depense}
+              required
+            />
+
+            {erreurGenerale && (
+              <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
+                {erreurGenerale}
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <Button type="submit" variant="boutique" loading={chargement}>
+                {modeEdition ? 'Enregistrer' : 'Créer la dépense'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => navigate('/depenses')}
+                className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </AppShell>
   );
 }

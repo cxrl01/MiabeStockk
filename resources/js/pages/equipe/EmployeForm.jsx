@@ -82,76 +82,87 @@ export default function EmployeForm() {
 
   return (
     <AppShell title={modeEdition ? "Modifier l'employé" : 'Ajouter un membre'}>
-      <form onSubmit={soumettre} className="max-w-lg space-y-5">
-        <div className="grid grid-cols-2 gap-4">
-          <TextField id="nom" label="Nom" value={form.nom} onChange={majChamp('nom')} error={erreurs.nom} required />
-          <TextField id="prenom" label="Prénom (optionnel)" value={form.prenom} onChange={majChamp('prenom')} error={erreurs.prenom} />
-        </div>
-
-        <TextField id="email" type="email" label="Adresse e-mail" value={form.email} onChange={majChamp('email')} error={erreurs.email} required />
-        <TextField id="telephone" label="Téléphone (optionnel)" value={form.telephone} onChange={majChamp('telephone')} error={erreurs.telephone} />
-
-        <TextField
-          id="password"
-          type="password"
-          label={modeEdition ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe'}
-          value={form.password}
-          onChange={majChamp('password')}
-          error={erreurs.password}
-          required={!modeEdition}
-        />
-
-        <div>
-          <label htmlFor="role" className="block text-sm font-medium text-ink900/80 mb-1.5">Rôle</label>
-          <select
-            id="role"
-            value={form.role}
-            onChange={majChamp('role')}
-            className="w-full rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm
-              focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
-          >
-            <option value="commercial">Commercial</option>
-            <option value="gestionnaire">Gestionnaire</option>
-          </select>
-          {erreurs.role && <p className="mt-1 text-xs text-danger">{erreurs.role}</p>}
-        </div>
-
-        <TextField
-          id="poste"
-          label="Poste (optionnel)"
-          placeholder="Ex : Caissière, Magasinier..."
-          hint="Simple libellé affiché, sans impact sur les permissions (définies par le rôle ci-dessus)."
-          value={form.poste}
-          onChange={majChamp('poste')}
-          error={erreurs.poste}
-        />
-
-        {modeEdition && (
-          <label className="flex items-center gap-2 text-sm text-ink900 cursor-pointer">
-            <input type="checkbox" checked={form.actif} onChange={majChamp('actif')} className="h-4 w-4" />
-            Compte actif
-          </label>
-        )}
-
-        {erreurGenerale && (
-          <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
-            {erreurGenerale}
+      <div className="max-w-xl mx-auto">
+        <div className="bg-surface rounded-xl border border-ink900/10 p-6 sm:p-8">
+          <h2 className="font-display font-semibold text-xl text-ink900 mb-1">
+            {modeEdition ? "Modifier l'employé" : 'Ajouter un membre'}
+          </h2>
+          <p className="text-sm text-ink900/50 mb-6">
+            {modeEdition ? 'Modifiez les informations de ce membre' : 'Créez un compte pour un employé'}
           </p>
-        )}
 
-        <div className="flex gap-3">
-          <Button type="submit" variant="boutique" loading={chargement}>
-            {modeEdition ? 'Enregistrer' : 'Créer le membre'}
-          </Button>
-          <button
-            type="button"
-            onClick={() => navigate('/equipe')}
-            className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
-          >
-            Annuler
-          </button>
+          <form onSubmit={soumettre} className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <TextField id="nom" label="Nom" value={form.nom} onChange={majChamp('nom')} error={erreurs.nom} required />
+              <TextField id="prenom" label="Prénom (optionnel)" value={form.prenom} onChange={majChamp('prenom')} error={erreurs.prenom} />
+            </div>
+
+            <TextField id="email" type="email" label="Adresse e-mail" value={form.email} onChange={majChamp('email')} error={erreurs.email} required />
+            <TextField id="telephone" label="Téléphone (optionnel)" value={form.telephone} onChange={majChamp('telephone')} error={erreurs.telephone} />
+
+            <TextField
+              id="password"
+              type="password"
+              label={modeEdition ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe'}
+              value={form.password}
+              onChange={majChamp('password')}
+              error={erreurs.password}
+              required={!modeEdition}
+            />
+
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-ink900/80 mb-1.5">Rôle</label>
+              <select
+                id="role"
+                value={form.role}
+                onChange={majChamp('role')}
+                className="w-full rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+              >
+                <option value="commercial">Commercial</option>
+                <option value="gestionnaire">Gestionnaire</option>
+              </select>
+              {erreurs.role && <p className="mt-1 text-xs text-danger">{erreurs.role}</p>}
+            </div>
+
+            <TextField
+              id="poste"
+              label="Poste (optionnel)"
+              placeholder="Ex : Caissière, Magasinier..."
+              hint="Simple libellé affiché, sans impact sur les permissions (définies par le rôle ci-dessus)."
+              value={form.poste}
+              onChange={majChamp('poste')}
+              error={erreurs.poste}
+            />
+
+            {modeEdition && (
+              <label className="flex items-center gap-2 text-sm text-ink900 cursor-pointer">
+                <input type="checkbox" checked={form.actif} onChange={majChamp('actif')} className="h-4 w-4" />
+                Compte actif
+              </label>
+            )}
+
+            {erreurGenerale && (
+              <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
+                {erreurGenerale}
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <Button type="submit" variant="boutique" loading={chargement}>
+                {modeEdition ? 'Enregistrer' : 'Créer le membre'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => navigate('/equipe')}
+                className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </AppShell>
   );
 }

@@ -233,24 +233,6 @@ function Reveal({ children, delay = 0, className = '' }) {
   );
 }
 
-function useCountUp(target, active, duration = 1100) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!active) return undefined;
-    let start;
-    let frame;
-    const step = (ts) => {
-      if (start === undefined) start = ts;
-      const progress = Math.min((ts - start) / duration, 1);
-      setValue(Math.round(target * progress));
-      if (progress < 1) frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [active, target, duration]);
-  return value;
-}
-
 /* ------------------------------------------------------------------ */
 /* Le carnet — démo interactive du suivi de dettes (mécanique réelle)  */
 /* ------------------------------------------------------------------ */
@@ -258,7 +240,6 @@ function useCountUp(target, active, duration = 1100) {
 function LedgerDemo() {
   const [entries, setEntries] = useState(LEDGER_SEED);
   const [queue, setQueue] = useState(PAIEMENTS_QUEUE);
-  const [receiptNo, setReceiptNo] = useState(0);
 
   const solde = entries.reduce((acc, e) => acc + (e.type === 'dette' ? e.montant : -e.montant), 0);
   const soldeZero = solde <= 0;
@@ -266,25 +247,22 @@ function LedgerDemo() {
   const handlePayment = () => {
     if (queue.length === 0) return;
     const [montant, ...rest] = queue;
-    const nextNo = receiptNo + 1;
     setEntries((prev) => [
       ...prev,
       {
         id: prev.length + 1,
         type: 'paiement',
         label: 'Ama Mensah',
-        note: `Paiement enregistré`,
+        note: 'Paiement enregistré',
         montant,
       },
     ]);
-    setReceiptNo(nextNo);
     setQueue(rest);
   };
 
   const handleReset = () => {
     setEntries(LEDGER_SEED);
     setQueue(PAIEMENTS_QUEUE);
-    setReceiptNo(0);
   };
 
   return (
@@ -345,15 +323,6 @@ function LedgerDemo() {
       </div>
 
       <div className="mt-4 flex items-center justify-center gap-3">
-        {/* {!soldeZero && (
-          <Button
-            variant="ghost"
-            className="border-success/30 px-3 py-2 text-sm text-success"
-            onClick={() => window.open('https://wa.me/22890000000?text=' + encodeURIComponent('Bonjour Ama, un rappel amical concernant votre dette.'), '_blank')}
-          >
-            Relancer sur WhatsApp
-          </Button>
-        )} */}
         <Button
           variant="boutique"
           onClick={handlePayment}
@@ -387,7 +356,12 @@ function FaqAccordion({ items }) {
       {items.map((item, i) => {
         const isOpen = open === i;
         return (
-          <div key={item.q} className="rounded-xl border border-ink900/10 bg-paper open:bg-white">
+          <div
+            key={item.q}
+            className={`rounded-xl border border-ink900/10 transition-colors ${
+              isOpen ? 'bg-white' : 'bg-paper'
+            }`}
+          >
             <button
               type="button"
               onClick={() => setOpen(isOpen ? -1 : i)}
@@ -449,7 +423,10 @@ function PiedDePage() {
               Le carnet de votre boutique, enfin numérique. Ventes, stock, dettes clients et
               trésorerie, pensé pour les commerçants togolais.
             </p>
-            <p className="mt-6 font-mono text-xs text-indigo-700" title="« Bienvenue » en langue éwé, parlée à Lomé">
+            <p
+              className="mt-6 font-mono text-xs text-indigo-700"
+              title="« Bienvenue » en langue éwé, parlée à Lomé"
+            >
               Woezor 👋 — Lomé, Togo
             </p>
           </div>

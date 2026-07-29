@@ -134,160 +134,167 @@ export default function NouvelleLivraison() {
 
   return (
     <AppShell title="Nouvelle livraison">
-      <form onSubmit={soumettre} className="max-w-2xl space-y-6">
-        {erreur && (
-          <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
-            {erreur}
-          </p>
-        )}
-
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <label className="block text-sm font-medium text-ink900/80 mb-1.5">Fournisseur</label>
-          <div className="flex gap-2">
-            <select
-              value={fournisseurId}
-              onChange={(e) => setFournisseurId(e.target.value)}
-              className="flex-1 rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm
-                focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
-            >
-              <option value="">Sélectionner un fournisseur</option>
-              {fournisseurs.map((f) => (
-                <option key={f.id} value={f.id}>{f.nom}</option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => setModalFournisseurOuvert(true)}
-              title="Créer un nouveau fournisseur"
-              className="shrink-0 rounded-lg border border-ink900/15 px-3 text-ink900/60 hover:bg-ink900/5"
-            >
-              +
-            </button>
-          </div>
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-6">
+          <h2 className="font-display font-semibold text-xl text-ink900 mb-1">Nouvelle livraison</h2>
+          <p className="text-sm text-ink900/50">Enregistrez une réception de marchandises chez un fournisseur</p>
         </div>
 
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-semibold text-ink900">Produits reçus</h2>
-            <button
-              type="button"
-              onClick={ajouterLigne}
-              className="text-sm font-medium text-indigo-700 hover:underline"
-            >
-              + Ajouter un produit
-            </button>
-          </div>
-
-          {lignes.length === 0 && (
-            <p className="text-sm text-ink900/40 py-4 text-center">Aucun produit ajouté.</p>
+        <form onSubmit={soumettre} className="space-y-6">
+          {erreur && (
+            <p role="alert" className="text-sm text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
+              {erreur}
+            </p>
           )}
 
-          <div className="space-y-3">
-            {lignes.map((ligne, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <select
-                  value={ligne.produit_id}
-                  onChange={(e) => majLigne(index, 'produit_id', e.target.value)}
-                  className="flex-1 rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm
-                    focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
-                >
-                  {produits.map((p) => (
-                    <option key={p.id} value={p.id}>{p.nom}</option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  min="1"
-                  value={ligne.quantite}
-                  onChange={(e) => majLigne(index, 'quantite', e.target.value)}
-                  placeholder="Qté"
-                  className="w-20 rounded-lg border border-ink900/15 bg-white px-2 py-2.5 text-sm text-center
-                    focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
-                />
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={ligne.prix_unitaire}
-                  onChange={(e) => majLigne(index, 'prix_unitaire', e.target.value)}
-                  placeholder="Prix achat"
-                  className="w-28 rounded-lg border border-ink900/15 bg-white px-2 py-2.5 text-sm text-right
-                    focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
-                />
-                <span className="w-24 text-right font-mono text-sm text-ink900/70 shrink-0">
-                  {formatMontant(Number(ligne.prix_unitaire || 0) * Number(ligne.quantite || 0))}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => retirerLigne(index)}
-                  className="text-danger/70 hover:text-danger text-sm shrink-0"
-                  aria-label="Retirer"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-surface rounded-xl border border-ink900/10 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <span className="font-display font-semibold text-ink900">Total</span>
-            <span className="font-mono text-2xl font-semibold text-indigo-700">{formatMontant(total)}</span>
+          <div className="bg-surface rounded-xl border border-ink900/10 p-5">
+            <label className="block text-sm font-medium text-ink900/80 mb-1.5">Fournisseur</label>
+            <div className="flex gap-2">
+              <select
+                value={fournisseurId}
+                onChange={(e) => setFournisseurId(e.target.value)}
+                className="flex-1 rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+              >
+                <option value="">Sélectionner un fournisseur</option>
+                {fournisseurs.map((f) => (
+                  <option key={f.id} value={f.id}>{f.nom}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setModalFournisseurOuvert(true)}
+                title="Créer un nouveau fournisseur"
+                className="shrink-0 rounded-lg border border-ink900/15 px-3 text-ink900/60 hover:bg-ink900/5"
+              >
+                +
+              </button>
+            </div>
           </div>
 
-          <label className="block text-sm font-medium text-ink900/80 mb-1.5">Mode de paiement</label>
-          <select
-            value={modePaiement}
-            onChange={(e) => setModePaiement(e.target.value)}
-            className="w-full rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm mb-4
-              focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
-          >
-            {MODES_PAIEMENT.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
+          <div className="bg-surface rounded-xl border border-ink900/10 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display font-semibold text-ink900">Produits reçus</h2>
+              <button
+                type="button"
+                onClick={ajouterLigne}
+                className="text-sm font-medium text-indigo-700 hover:underline"
+              >
+                + Ajouter un produit
+              </button>
+            </div>
 
-          <label className="flex items-center gap-2 text-sm text-ink900 mb-3 cursor-pointer">
+            {lignes.length === 0 && (
+              <p className="text-sm text-ink900/40 py-4 text-center">Aucun produit ajouté.</p>
+            )}
+
+            <div className="space-y-3">
+              {lignes.map((ligne, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <select
+                    value={ligne.produit_id}
+                    onChange={(e) => majLigne(index, 'produit_id', e.target.value)}
+                    className="flex-1 rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+                  >
+                    {produits.map((p) => (
+                      <option key={p.id} value={p.id}>{p.nom}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min="1"
+                    value={ligne.quantite}
+                    onChange={(e) => majLigne(index, 'quantite', e.target.value)}
+                    placeholder="Qté"
+                    className="w-20 rounded-lg border border-ink900/15 bg-white px-2 py-2.5 text-sm text-center
+                      focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={ligne.prix_unitaire}
+                    onChange={(e) => majLigne(index, 'prix_unitaire', e.target.value)}
+                    placeholder="Prix achat"
+                    className="w-28 rounded-lg border border-ink900/15 bg-white px-2 py-2.5 text-sm text-right
+                      focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+                  />
+                  <span className="w-24 text-right font-mono text-sm text-ink900/70 shrink-0">
+                    {formatMontant(Number(ligne.prix_unitaire || 0) * Number(ligne.quantite || 0))}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => retirerLigne(index)}
+                    className="text-danger/70 hover:text-danger text-sm shrink-0"
+                    aria-label="Retirer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-surface rounded-xl border border-ink900/10 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-display font-semibold text-ink900">Total</span>
+              <span className="font-mono text-2xl font-semibold text-indigo-700">{formatMontant(total)}</span>
+            </div>
+
+            <label className="block text-sm font-medium text-ink900/80 mb-1.5">Mode de paiement</label>
+            <select
+              value={modePaiement}
+              onChange={(e) => setModePaiement(e.target.value)}
+              className="w-full rounded-lg border border-ink900/15 bg-white px-3 py-2.5 text-sm mb-4
+                focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+            >
+              {MODES_PAIEMENT.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+
+            <label className="flex items-center gap-2 text-sm text-ink900 mb-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={payerTotalite}
+                onChange={(e) => setPayerTotalite(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Payer la totalité maintenant
+            </label>
+
+            <label className="block text-sm font-medium text-ink900/80 mb-1.5">Montant payé au fournisseur</label>
             <input
-              type="checkbox"
-              checked={payerTotalite}
-              onChange={(e) => setPayerTotalite(e.target.checked)}
-              className="h-4 w-4"
+              type="number"
+              min="0"
+              step="1"
+              value={montantPaye}
+              readOnly={payerTotalite}
+              onChange={(e) => setMontantPaye(e.target.value)}
+              className="w-full rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm
+                focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600
+                read-only:bg-ink900/[0.03]"
             />
-            Payer la totalité maintenant
-          </label>
+            <p className="text-xs text-ink900/40 mt-1">
+              Le solde impayé sera ajouté à la dette de ce fournisseur.
+            </p>
+          </div>
 
-          <label className="block text-sm font-medium text-ink900/80 mb-1.5">Montant payé au fournisseur</label>
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value={montantPaye}
-            readOnly={payerTotalite}
-            onChange={(e) => setMontantPaye(e.target.value)}
-            className="w-full rounded-lg border border-ink900/15 bg-white px-3.5 py-2.5 text-sm
-              focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600
-              read-only:bg-ink900/[0.03]"
-          />
-          <p className="text-xs text-ink900/40 mt-1">
-            Le solde impayé sera ajouté à la dette de ce fournisseur.
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          <Button type="submit" variant="boutique" loading={chargement}>
-            Enregistrer la livraison
-          </Button>
-          <button
-            type="button"
-            onClick={() => navigate('/fournisseurs')}
-            className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
-          >
-            Annuler
-          </button>
-        </div>
-      </form>
+          <div className="flex gap-3">
+            <Button type="submit" variant="boutique" loading={chargement}>
+              Enregistrer la livraison
+            </Button>
+            <button
+              type="button"
+              onClick={() => navigate('/fournisseurs')}
+              className="text-sm font-medium text-ink900/60 hover:text-ink900 px-4"
+            >
+              Annuler
+            </button>
+          </div>
+        </form>
+      </div>
 
       {modalFournisseurOuvert && (
         <div className="fixed inset-0 bg-ink900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">

@@ -24,7 +24,8 @@ class BoutiqueController extends Controller
      * Super Admin : toutes les boutiques de la plateforme (Tableau 6,
      * "Consulter liste des boutiques"), avec gerant + effectif + CA cumule.
      * Gerant : ses boutiques (mode multi points de vente). Staff : sa
-     * boutique unique.
+     * boutique unique. Les boutiques au statut "supprimee" sont exclues
+     * partout (suppression = statut, pas suppression physique).
      */
     public function index(): JsonResponse
     {
@@ -32,13 +33,18 @@ class BoutiqueController extends Controller
 
         $boutiques = match (true) {
             $user->hasRole('super_admin') => Boutique::with('gerant:id,nom,prenom')
+                ->where('statut', '!=', 'supprimee')
                 ->withCount('staff')
                 ->withSum(['commandes as ca_total' => function ($q) {
                     $q->where('type', 'vente')->where('statut', 'validee');
                 }], 'montant_ttc')
                 ->get(),
-            $user->hasRole('gerant') => $user->boutiquesGerees()->get(),
-            default => Boutique::where('id', $user->boutique_id)->get(),
+            $user->hasRole('gerant') => $user->boutiquesGerees()
+                ->where('statut', '!=', 'supprimee')
+                ->get(),
+            default => Boutique::where('id', $user->boutique_id)
+                ->where('statut', '!=', 'supprimee')
+                ->get(),
         };
 
         return response()->json($boutiques);
@@ -62,25 +68,25 @@ class BoutiqueController extends Controller
     }
 
     /**
- * Fiche detail d'une boutique (utilisee par AdminBoutiqueDetail.jsx) :
- * gerant charge (avec email), EQUIPE complete (nom/prenom/email/role) au
- * lieu d'un simple comptage, et CA cumule calcule.
- */
-public function show(Boutique $boutique): JsonResponse
-{
-    $this->authorize('view', $boutique);
+     * Fiche detail d'une boutique (utilisee par AdminBoutiqueDetail.jsx) :
+     * gerant charge (avec email), EQUIPE complete (nom/prenom/email/role) au
+     * lieu d'un simple comptage, et CA cumule calcule.
+     */
+    public function show(Boutique $boutique): JsonResponse
+    {
+        $this->authorize('view', $boutique);
 
-    $boutique->load([
-            'gerant:id,nom,prenom,email',
-            'staff:id,nom,prenom,email,boutique_id,role_id',
-            'staff.role:id,nom,libelle',
-        ])
-        ->loadSum(['commandes as ca_total' => function ($query) {
-            $query->where('type', 'vente')->where('statut', 'validee');
-        }], 'montant_ttc');
+        $boutique->load([
+                'gerant:id,nom,prenom,email',
+                'staff:id,nom,prenom,email,boutique_id,role_id',
+                'staff.role:id,nom,libelle',
+            ])
+            ->loadSum(['commandes as ca_total' => function ($query) {
+                $query->where('type', 'vente')->where('statut', 'validee');
+            }], 'montant_ttc');
 
-    return response()->json($boutique);
-}
+        return response()->json($boutique);
+    }
 
     public function update(UpdateBoutiqueRequest $request, Boutique $boutique): JsonResponse
     {
@@ -162,10 +168,12 @@ public function show(Boutique $boutique): JsonResponse
     }
 
     /**
-     * Tableau 6 : "Supprimer boutique" (Super Admin). Refuse si la boutique a
-     * deja de l'activite. Motif obligatoire + email au gerant avant
-     * suppression effective (le gerant/la boutique n'existent plus apres
-     * $boutique->delete()).
+     * Tableau 6 : "Supprimer boutique" (Super Admin ou Gerant sur ses
+     * propres boutiques). Motif obligatoire. La "suppression" est un
+     * changement de statut, pas une suppression physique en base : les
+     * commandes, le CA cumule et le journal d'activite restent intacts et
+     * consultables (traçabilité comptable). La boutique disparait juste de
+     * toutes les listes actives (voir index()).
      */
     public function destroy(Request $request, Boutique $boutique): JsonResponse
     {
@@ -175,21 +183,19 @@ public function show(Boutique $boutique): JsonResponse
             'motif' => ['required', 'string', 'min:5', 'max:500'],
         ]);
 
-        if (Commande::where('boutique_id', $boutique->id)->exists()) {
-            return response()->json([
-                'message' => 'Impossible de supprimer une boutique ayant déjà des opérations enregistrées. Suspendez-la à la place.',
-            ], 422);
+        if ($boutique->statut === 'supprimee') {
+            return response()->json(['message' => 'Cette boutique est déjà supprimée.'], 422);
         }
 
         $nomBoutique = $boutique->nom;
         $gerant = $boutique->gerant;
 
+        $boutique->update(['statut' => 'supprimee']);
+
         $this->journaliser('boutique.supprimee', $boutique, [
             'nom' => $nomBoutique,
             'motif' => $donnees['motif'],
         ]);
-
-        $boutique->delete();
 
         if ($gerant?->email) {
             try {
