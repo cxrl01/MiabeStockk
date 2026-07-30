@@ -64,9 +64,12 @@ export default function SidebarSuperAdmin({ collapsed, mobileOpen, onCloseMobile
             SA
           </div>
           <div className={`min-w-0 ${collapsed ? 'lg:hidden' : ''}`}>
-            <p className="font-display font-semibold text-ink900 text-sm truncate">MiabéStock</p>
-            <p className="text-xs text-ink900/40">Super Administration</p>
-          </div>
+  <p className="font-display font-semibold text-sm truncate">
+    <span className="text-indigo-700">Miabé</span>
+    <span className="text-ochre-500">Stock</span>
+  </p>
+  <p className="text-xs text-ink900/40">Super Administration</p>
+</div>
         </div>
 
         <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
