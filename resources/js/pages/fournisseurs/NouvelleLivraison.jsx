@@ -234,7 +234,7 @@ export default function NouvelleLivraison() {
                       className="text-danger/70 hover:text-danger text-sm shrink-0"
                       aria-label="Retirer"
                     >
-                      ✕
+                      Suprimer
                     </button>
                   </div>
                 </div>
