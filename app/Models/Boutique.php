@@ -12,7 +12,7 @@ class Boutique extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['gerant_id', 'nom', 'adresse', 'telephone', 'logo', 'devise', 'tva', 'statut'];
+    protected $fillable = ['gerant_id', 'nom', 'adresse', 'telephone', 'logo', 'logo_public_id', 'devise', 'tva', 'statut'];
 
     protected $appends = ['logo_url'];
 
@@ -26,10 +26,20 @@ class Boutique extends Model
     /**
      * URL publique du logo (affiche sur factures/recus). Null si aucun
      * logo n'est defini.
+     *
+     * Gere deux cas : les logos Cloudinary (deja une URL complete en
+     * base, stockee telle quelle) et les anciens logos locaux herites
+     * du disque public de Render (chemin relatif, ex: "logos/xxx.png").
      */
     public function getLogoUrlAttribute(): ?string
     {
-        return $this->logo ? Storage::disk('public')->url($this->logo) : null;
+        if (! $this->logo) {
+            return null;
+        }
+
+        return str_starts_with($this->logo, 'http')
+            ? $this->logo
+            : Storage::disk('public')->url($this->logo);
     }
 
     /**
@@ -41,14 +51,30 @@ class Boutique extends Model
      */
     public function getLogoBase64Attribute(): ?string
     {
-        if (! $this->logo || ! Storage::disk('public')->exists($this->logo)) {
+        if (! $this->logo) {
             return null;
         }
 
-        $contenu = Storage::disk('public')->get($this->logo);
-        $mime = Storage::disk('public')->mimeType($this->logo);
+        try {
+            if (str_starts_with($this->logo, 'http')) {
+                $contenu = file_get_contents($this->logo);
+                if ($contenu === false) {
+                    return null;
+                }
+                $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($contenu);
+            } else {
+                if (! Storage::disk('public')->exists($this->logo)) {
+                    return null;
+                }
+                $contenu = Storage::disk('public')->get($this->logo);
+                $mime = Storage::disk('public')->mimeType($this->logo);
+            }
 
-        return 'data:' . $mime . ';base64,' . base64_encode($contenu);
+            return 'data:' . $mime . ';base64,' . base64_encode($contenu);
+        } catch (\Throwable $e) {
+            report($e);
+            return null;
+        }
     }
 
     // Un Gérant peut posséder plusieurs boutiques (relation 1,n retenue depuis le

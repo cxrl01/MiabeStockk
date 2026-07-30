@@ -6,17 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('boutiques', function (Blueprint $table) {
-            $table->string('logo_path')->nullable()->after('tva');
+            $table->string('logo_public_id')->nullable()->after('logo');
         });
     }
-
+    
     public function down(): void
     {
         Schema::table('boutiques', function (Blueprint $table) {
-            $table->dropColumn('logo_path');
+            $table->dropColumn('logo_public_id');
         });
     }
 };

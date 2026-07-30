@@ -10,6 +10,7 @@ use App\Mail\BoutiqueSupprimeeMail;
 use App\Mail\BoutiqueSuspendueMail;
 use App\Models\Boutique;
 use App\Models\Commande;
+use App\Services\CloudinaryService;
 use App\Traits\JournaliseActivite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -97,9 +98,10 @@ class BoutiqueController extends Controller
     /**
      * Logo de la boutique, affiche sur factures/recus (meme autorisation
      * que "update", cf. Tableau 6 "Configurer boutique" = Gerant).
-     * Remplace l'ancien fichier s'il existe deja.
+     * Stocke sur Cloudinary (disque local de Render non persistant).
+     * Remplace l'ancien fichier Cloudinary s'il existe deja.
      */
-    public function uploaderLogo(Request $request, Boutique $boutique): JsonResponse
+    public function uploaderLogo(Request $request, Boutique $boutique, CloudinaryService $cloudinary): JsonResponse
     {
         $this->authorize('update', $boutique);
 
@@ -107,23 +109,40 @@ class BoutiqueController extends Controller
             'logo' => ['required', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
         ]);
 
-        if ($boutique->logo) {
-            Storage::disk('public')->delete($boutique->logo);
+        if ($boutique->logo_public_id) {
+            $cloudinary->supprimer($boutique->logo_public_id);
         }
 
-        $chemin = $donnees['logo']->store('logos', 'public');
-        $boutique->update(['logo' => $chemin]);
+        $resultat = $cloudinary->uploader(
+            $donnees['logo']->getRealPath(),
+            'miabestock/logos',
+            'boutique_' . $boutique->id
+        );
+
+        $boutique->update([
+            'logo' => $resultat['url'],
+            'logo_public_id' => $resultat['public_id'],
+        ]);
 
         $this->journaliser('boutique.logo_modifie', $boutique);
 
         return response()->json($boutique->fresh());
     }
 
-    public function supprimerLogo(Boutique $boutique): JsonResponse
+    /**
+     * Supprime le logo Cloudinary. Gere aussi le cas residuel d'un ancien
+     * logo local (herite du disque public de Render), au cas ou une
+     * boutique en aurait encore un en base au moment de la bascule.
+     */
+    public function supprimerLogo(Boutique $boutique, CloudinaryService $cloudinary): JsonResponse
     {
         $this->authorize('update', $boutique);
 
-        if ($boutique->logo) {
+        if ($boutique->logo_public_id) {
+            $cloudinary->supprimer($boutique->logo_public_id);
+            $boutique->update(['logo' => null, 'logo_public_id' => null]);
+            $this->journaliser('boutique.logo_supprime', $boutique);
+        } elseif ($boutique->logo) {
             Storage::disk('public')->delete($boutique->logo);
             $boutique->update(['logo' => null]);
             $this->journaliser('boutique.logo_supprime', $boutique);
