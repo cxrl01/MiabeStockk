@@ -140,7 +140,7 @@ export default function VentesListe() {
       </div>
 
       {/* Table */}
-      <div className="bg-surface rounded-xl border border-ink900/10 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-ink900/10 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-ink900/10 text-left text-ink900/40 text-xs uppercase tracking-wider">

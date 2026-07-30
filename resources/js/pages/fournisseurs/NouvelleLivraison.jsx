@@ -190,47 +190,53 @@ export default function NouvelleLivraison() {
 
             <div className="space-y-3">
               {lignes.map((ligne, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 border border-ink900/10 rounded-lg p-3 sm:border-0 sm:p-0"
+                >
                   <select
                     value={ligne.produit_id}
                     onChange={(e) => majLigne(index, 'produit_id', e.target.value)}
-                    className="flex-1 rounded-lg border border-ink900/15 bg-surface px-3 py-2.5 text-sm
+                    className="w-full sm:flex-1 rounded-lg border border-ink900/15 bg-surface px-3 py-2.5 text-sm
                       focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
                   >
                     {produits.map((p) => (
                       <option key={p.id} value={p.id}>{p.nom}</option>
                     ))}
                   </select>
-                  <input
-                    type="number"
-                    min="1"
-                    value={ligne.quantite}
-                    onChange={(e) => majLigne(index, 'quantite', e.target.value)}
-                    placeholder="Qté"
-                    className="w-20 rounded-lg border border-ink900/15 bg-surface px-2 py-2.5 text-sm text-center
-                      focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={ligne.prix_unitaire}
-                    onChange={(e) => majLigne(index, 'prix_unitaire', e.target.value)}
-                    placeholder="Prix achat"
-                    className="w-28 rounded-lg border border-ink900/15 bg-surface px-2 py-2.5 text-sm text-right
-                      focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
-                  />
-                  <span className="w-24 text-right font-mono text-sm text-ink900/70 shrink-0">
-                    {formatMontant(Number(ligne.prix_unitaire || 0) * Number(ligne.quantite || 0))}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => retirerLigne(index)}
-                    className="text-danger/70 hover:text-danger text-sm shrink-0"
-                    aria-label="Retirer"
-                  >
-                    ✕
-                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      value={ligne.quantite}
+                      onChange={(e) => majLigne(index, 'quantite', e.target.value)}
+                      placeholder="Qté"
+                      className="w-16 sm:w-20 rounded-lg border border-ink900/15 bg-surface px-2 py-2.5 text-sm text-center
+                        focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={ligne.prix_unitaire}
+                      onChange={(e) => majLigne(index, 'prix_unitaire', e.target.value)}
+                      placeholder="Prix achat"
+                      className="w-24 sm:w-28 rounded-lg border border-ink900/15 bg-surface px-2 py-2.5 text-sm text-right
+                        focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+                    />
+                    <span className="flex-1 sm:w-24 sm:flex-none text-right font-mono text-sm text-ink900/70 shrink-0">
+                      {formatMontant(Number(ligne.prix_unitaire || 0) * Number(ligne.quantite || 0))}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => retirerLigne(index)}
+                      className="text-danger/70 hover:text-danger text-sm shrink-0"
+                      aria-label="Retirer"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
