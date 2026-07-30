@@ -231,10 +231,11 @@ export default function NouvelleLivraison() {
                     <button
                       type="button"
                       onClick={() => retirerLigne(index)}
-                      className="text-danger/70 hover:text-danger text-sm shrink-0"
                       aria-label="Retirer"
+                      className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg
+                        bg-danger/10 text-danger hover:bg-danger/20 text-base font-bold transition-colors"
                     >
-                      Suprimer
+                      ✕
                     </button>
                   </div>
                 </div>
