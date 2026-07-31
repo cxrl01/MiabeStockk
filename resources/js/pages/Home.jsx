@@ -266,7 +266,10 @@ function LedgerDemo() {
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-sm rotate-1 motion-safe:transition-transform motion-safe:hover:rotate-0 motion-safe:duration-500">
+    <div
+      className="relative mx-auto w-full max-w-sm rotate-1 motion-safe:transition-transform motion-safe:duration-500
+        [@media(hover:hover)]:hover:rotate-0 active:rotate-0"
+    >
       <div className="absolute -top-2.5 left-8 right-8 z-10 flex justify-between">
         {Array.from({ length: 7 }).map((_, i) => (
           <span key={i} className="h-3 w-3 rounded-full bg-paper ring-2 ring-ink900/15" />
@@ -327,7 +330,7 @@ function LedgerDemo() {
           variant="boutique"
           onClick={handlePayment}
           disabled={queue.length === 0}
-          className="px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+          className="touch-manipulation px-4 py-2 text-sm active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {queue.length === 0 ? 'Compte soldé' : 'Enregistrer un paiement'}
         </Button>
@@ -335,7 +338,7 @@ function LedgerDemo() {
           <button
             type="button"
             onClick={handleReset}
-            className="font-mono text-xs text-ink900/40 underline-offset-2 hover:text-ink900/70 hover:underline"
+            className="touch-manipulation font-mono text-xs text-ink900/40 underline-offset-2 hover:text-ink900/70 hover:underline active:text-ink900/70"
           >
             Rejouer
           </button>
@@ -366,7 +369,7 @@ function FaqAccordion({ items }) {
               type="button"
               onClick={() => setOpen(isOpen ? -1 : i)}
               aria-expanded={isOpen}
-              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-display text-sm font-semibold text-ink900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+              className="touch-manipulation flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-display text-sm font-semibold text-ink900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
             >
               {item.q}
               <span
@@ -440,11 +443,11 @@ function PiedDePage() {
                 {liens.map((lien) => (
                   <li key={lien.label}>
                     {lien.to ? (
-                      <Link to={lien.to} className="text-indigo-500 hover:text-paper transition-colors">
+                      <Link to={lien.to} className="touch-manipulation text-indigo-500 hover:text-paper active:text-paper transition-colors">
                         {lien.label}
                       </Link>
                     ) : (
-                      <a href={lien.href} className="text-indigo-500 hover:text-paper transition-colors">
+                      <a href={lien.href} className="touch-manipulation text-indigo-500 hover:text-paper active:text-paper transition-colors">
                         {lien.label}
                       </a>
                     )}
@@ -495,18 +498,18 @@ export default function Home() {
       <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between border-b border-dashed border-ink900/15 px-6 py-5">
         <Link
           to="/"
-          className="font-display text-2xl font-semibold tracking-tight text-indigo-700 sm:text-3xl"
+          className="touch-manipulation font-display text-2xl font-semibold tracking-tight text-indigo-700 sm:text-3xl"
         >
           Miabé<span className="text-ochre-500">Stock</span>
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link to="/connexion">
-            <Button variant="ghost" className="text-ink900/70">
+          <Link to="/connexion" className="touch-manipulation">
+            <Button variant="ghost" className="px-4 py-2 text-sm text-ink900/70 active:scale-95 sm:px-5 sm:py-2.5">
               Connexion
             </Button>
           </Link>
-          <Link to="/inscription">
-            <Button variant="boutique">Créer ma boutique</Button>
+          <Link to="/inscription" className="touch-manipulation">
+            <Button variant="boutique" className="px-4 py-2 text-sm active:scale-95 sm:px-5 sm:py-2.5">Créer ma boutique</Button>
           </Link>
         </div>
       </nav>
@@ -521,7 +524,7 @@ export default function Home() {
           <p className="mb-5 font-mono text-xs uppercase tracking-[0.22em] text-ochre-600">
             Fini le cahier qui se perd
           </p>
-          <h1 className="font-display text-4xl font-semibold leading-[1.08] tracking-tight text-ink900 sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-3xl font-semibold leading-[1.12] tracking-tight text-ink900 sm:text-5xl lg:text-6xl">
             Le carnet de votre boutique,
             <br />
             <em className="not-italic text-indigo-700">enfin incassable.</em>
@@ -531,13 +534,13 @@ export default function Home() {
             perdrez jamais, et que vous n&apos;oublierez jamais d&apos;emporter.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-            <Link to="/inscription">
-              <Button variant="boutique" className="px-6 py-3 text-base">
+            <Link to="/inscription" className="touch-manipulation">
+              <Button variant="boutique" className="px-6 py-3 text-base active:scale-95">
                 Créer ma boutique
               </Button>
             </Link>
-            <a href="#features">
-              <Button variant="ghost" className="border-indigo-700/25 px-6 py-3 text-base text-indigo-700">
+            <a href="#features" className="touch-manipulation">
+              <Button variant="ghost" className="border-indigo-700/25 px-6 py-3 text-base text-indigo-700 active:scale-95">
                 Voir les fonctionnalités
               </Button>
             </a>
@@ -577,7 +580,12 @@ export default function Home() {
         <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f, i) => (
             <Reveal key={f.titre} delay={i * 80} className="group">
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-900 text-ochre-500 motion-safe:transition-transform motion-safe:duration-300 group-hover:-rotate-6 group-hover:scale-105">
+              <div
+                className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-900 text-ochre-500
+                  motion-safe:transition-transform motion-safe:duration-300
+                  [@media(hover:hover)]:group-hover:-rotate-6 [@media(hover:hover)]:group-hover:scale-105
+                  active:-rotate-6 active:scale-105"
+              >
                 <Icon>{f.icon}</Icon>
               </div>
               <h3 className="font-display text-lg font-semibold text-ink900">{f.titre}</h3>
@@ -632,8 +640,8 @@ export default function Home() {
           Rejoignez les commerçants qui pilotent leur activité avec précision — sans complexité
           inutile.
         </p>
-        <Link to="/inscription" className="mt-8 inline-block">
-          <Button variant="boutique" className="px-6 py-3 text-base">
+        <Link to="/inscription" className="touch-manipulation mt-8 inline-block">
+          <Button variant="boutique" className="px-6 py-3 text-base active:scale-95">
             Créer ma boutique gratuitement
           </Button>
         </Link>

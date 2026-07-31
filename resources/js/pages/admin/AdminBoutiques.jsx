@@ -151,71 +151,73 @@ export default function AdminBoutiques() {
           </div>
         </div>
 
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-ink900/10 text-left text-ink900/40 text-xs uppercase tracking-wider">
-              <th className="px-5 py-3 font-medium">ID</th>
-              <th className="px-5 py-3 font-medium">Boutique</th>
-              <th className="px-5 py-3 font-medium">Gérant</th>
-              <th className="px-5 py-3 font-medium text-right">Utilisateurs</th>
-              <th className="px-5 py-3 font-medium text-right">CA total</th>
-              <th className="px-5 py-3 font-medium">Statut</th>
-              <th className="px-5 py-3 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {boutiquesFiltrees.map((b) => (
-              <tr key={b.id} className="border-b border-ink900/5 last:border-0 hover:bg-ink900/[0.02]">
-                <td className="px-5 py-3.5 font-mono text-ink900/50">B-{String(b.id).padStart(3, '0')}</td>
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className="h-8 w-8 shrink-0 rounded-lg bg-indigo-700 text-white text-xs font-semibold flex items-center justify-center">
-                      {b.nom.slice(0, 2).toUpperCase()}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-ink900/10 text-left text-ink900/40 text-xs uppercase tracking-wider">
+                <th className="px-5 py-3 font-medium">ID</th>
+                <th className="px-5 py-3 font-medium">Boutique</th>
+                <th className="px-5 py-3 font-medium">Gérant</th>
+                <th className="px-5 py-3 font-medium text-right">Utilisateurs</th>
+                <th className="px-5 py-3 font-medium text-right">CA total</th>
+                <th className="px-5 py-3 font-medium">Statut</th>
+                <th className="px-5 py-3 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {boutiquesFiltrees.map((b) => (
+                <tr key={b.id} className="border-b border-ink900/5 last:border-0 hover:bg-ink900/[0.02]">
+                  <td className="px-5 py-3.5 font-mono text-ink900/50">B-{String(b.id).padStart(3, '0')}</td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <span className="h-8 w-8 shrink-0 rounded-lg bg-indigo-700 text-white text-xs font-semibold flex items-center justify-center">
+                        {b.nom.slice(0, 2).toUpperCase()}
+                      </span>
+                      <span className="text-ink900 font-medium">{b.nom}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3.5 text-ink900/60">
+                    {b.gerant ? `${b.gerant.nom} ${b.gerant.prenom ?? ''}` : '—'}
+                  </td>
+                  <td className="px-5 py-3.5 text-right font-mono text-ink900/70">{b.staff_count ?? 0}</td>
+                  <td className="px-5 py-3.5 text-right font-mono text-ink900 font-medium">{formatMontant(b.ca_total ?? 0)}</td>
+                  <td className="px-5 py-3.5">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                      b.statut === 'active' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
+                    }`}>
+                      {b.statut === 'active' ? 'Actif' : 'Suspendu'}
                     </span>
-                    <span className="text-ink900 font-medium">{b.nom}</span>
-                  </div>
-                </td>
-                <td className="px-5 py-3.5 text-ink900/60">
-                  {b.gerant ? `${b.gerant.nom} ${b.gerant.prenom ?? ''}` : '—'}
-                </td>
-                <td className="px-5 py-3.5 text-right font-mono text-ink900/70">{b.staff_count ?? 0}</td>
-                <td className="px-5 py-3.5 text-right font-mono text-ink900 font-medium">{formatMontant(b.ca_total ?? 0)}</td>
-                <td className="px-5 py-3.5">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                    b.statut === 'active' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
-                  }`}>
-                    {b.statut === 'active' ? 'Actif' : 'Suspendu'}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center justify-end gap-2 text-ink900/50">
-                    <button onClick={() => navigate(`/admin/boutiques/${b.id}`)} title="Voir" className="hover:text-indigo-700">
-                      <IconEye />
-                    </button>
-                    {b.statut === 'active' ? (
-                      <button onClick={() => suspendre(b)} disabled={actionEnCours === b.id} title="Suspendre" className="hover:text-danger disabled:opacity-40">
-                        <IconBan />
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center justify-end gap-2 text-ink900/50">
+                      <button onClick={() => navigate(`/admin/boutiques/${b.id}`)} title="Voir" className="hover:text-indigo-700">
+                        <IconEye />
                       </button>
-                    ) : (
-                      <button onClick={() => reactiver(b)} disabled={actionEnCours === b.id} title="Réactiver" className="hover:text-success disabled:opacity-40">
-                        <IconCheck />
+                      {b.statut === 'active' ? (
+                        <button onClick={() => suspendre(b)} disabled={actionEnCours === b.id} title="Suspendre" className="hover:text-danger disabled:opacity-40">
+                          <IconBan />
+                        </button>
+                      ) : (
+                        <button onClick={() => reactiver(b)} disabled={actionEnCours === b.id} title="Réactiver" className="hover:text-success disabled:opacity-40">
+                          <IconCheck />
+                        </button>
+                      )}
+                      <button onClick={() => supprimer(b)} disabled={actionEnCours === b.id} title="Supprimer" className="hover:text-danger disabled:opacity-40">
+                        <IconTrash />
                       </button>
-                    )}
-                    <button onClick={() => supprimer(b)} disabled={actionEnCours === b.id} title="Supprimer" className="hover:text-danger disabled:opacity-40">
-                      <IconTrash />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
 
-            {boutiques && boutiquesFiltrees.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-5 py-10 text-center text-ink900/40">Aucune boutique.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              {boutiques && boutiquesFiltrees.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-5 py-10 text-center text-ink900/40">Aucune boutique.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </AppShell>
   );

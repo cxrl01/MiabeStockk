@@ -206,56 +206,58 @@ export default function AdminJournal() {
         </div>
 
         {/* Tableau des entrées */}
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-ink900/10 text-left text-ink900/40 text-xs uppercase tracking-wider">
-              <th className="px-5 py-3 font-medium">Date</th>
-              <th className="px-5 py-3 font-medium">Action</th>
-              <th className="px-5 py-3 font-medium">Utilisateur</th>
-              <th className="px-5 py-3 font-medium">Boutique</th>
-              <th className="px-5 py-3 font-medium">Détail</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-5 py-10 text-center text-ink900/40">
-                  Chargement des activités...
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-ink900/10 text-left text-ink900/40 text-xs uppercase tracking-wider">
+                <th className="px-5 py-3 font-medium">Date</th>
+                <th className="px-5 py-3 font-medium">Action</th>
+                <th className="px-5 py-3 font-medium">Utilisateur</th>
+                <th className="px-5 py-3 font-medium">Boutique</th>
+                <th className="px-5 py-3 font-medium">Détail</th>
               </tr>
-            ) : (
-              entreesFiltrees.map((e) => (
-                <tr key={e.id} className="border-b border-ink900/5 last:border-0 hover:bg-ink900/[0.02]">
-                  <td className="px-5 py-3.5 text-ink900/60 whitespace-nowrap">
-                    {formatDate(e.created_at)} {formatHeure(e.created_at)}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-indigo-700/10 text-indigo-700">
-                      {libelleAction(e.action)}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-ink900/70">
-                    {e.user ? `${e.user.nom} ${e.user.prenom ?? ''}`.trim() : '—'}
-                  </td>
-                  <td className="px-5 py-3.5 text-ink900/60">{e.boutique?.nom ?? '—'}</td>
-                  <td className="px-5 py-3.5 text-ink900/40 text-xs max-w-xs truncate">
-                    {e.donnees?.motif 
-                      ? `Motif : ${e.donnees.motif}` 
-                      : (e.donnees?.nom ?? e.description ?? '—')}
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-5 py-10 text-center text-ink900/40">
+                    Chargement des activités...
                   </td>
                 </tr>
-              ))
-            )}
+              ) : (
+                entreesFiltrees.map((e) => (
+                  <tr key={e.id} className="border-b border-ink900/5 last:border-0 hover:bg-ink900/[0.02]">
+                    <td className="px-5 py-3.5 text-ink900/60 whitespace-nowrap">
+                      {formatDate(e.created_at)} {formatHeure(e.created_at)}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-indigo-700/10 text-indigo-700">
+                        {libelleAction(e.action)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-ink900/70">
+                      {e.user ? `${e.user.nom} ${e.user.prenom ?? ''}`.trim() : '—'}
+                    </td>
+                    <td className="px-5 py-3.5 text-ink900/60">{e.boutique?.nom ?? '—'}</td>
+                    <td className="px-5 py-3.5 text-ink900/40 text-xs max-w-xs truncate">
+                      {e.donnees?.motif 
+                        ? `Motif : ${e.donnees.motif}` 
+                        : (e.donnees?.nom ?? e.description ?? '—')}
+                    </td>
+                  </tr>
+                ))
+              )}
 
-            {!loading && entrees && entreesFiltrees.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-5 py-10 text-center text-ink900/40">
-                  Aucune activité enregistrée pour cette période.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              {!loading && entrees && entreesFiltrees.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-5 py-10 text-center text-ink900/40">
+                    Aucune activité enregistrée pour cette période.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </AppShell>
   );
