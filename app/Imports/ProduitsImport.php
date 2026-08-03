@@ -4,33 +4,56 @@ namespace App\Imports;
 
 use App\Models\Categorie;
 use App\Models\Produit;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\SkipsOnError;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Validators\Failure;
+use Throwable;
 
 /**
  * Import en masse du catalogue produits depuis un fichier Excel/CSV.
- * Colonnes attendues (voir modèle téléchargeable) : nom, reference,
- * categorie, prix_achat, prix_vente, quantite_stock, seuil_alerte.
- *
- * ToCollection (plutôt que ToModel) pour pouvoir résoudre/créer la
- * catégorie par son nom avant l'insertion, et compter précisément
- * lignes importées vs lignes en erreur.
+ * Tolère les variations d'en-tête (accents, "de"/"d'", casse) et les
+ * formats de nombre à la française. Aucune ligne en échec ne stoppe
+ * l'import global : tout est collecté dans $erreurs.
  */
-class ProduitsImport implements ToCollection, WithHeadingRow, WithValidation, SkipsEmptyRows
+class ProduitsImport implements
+    ToCollection,
+    WithHeadingRow,
+    WithValidation,
+    SkipsEmptyRows,
+    SkipsOnError,
+    SkipsOnFailure
 {
     use Importable;
 
     private int $boutiqueId;
     public int $nombreImportes = 0;
+    public int $nombreIgnores = 0;
     public array $erreurs = [];
 
-    // Cache local pour éviter de recréer/rechercher la même catégorie à
-    // chaque ligne du fichier.
     private array $categoriesCache = [];
+
+    /** Alias de colonnes -> clé canonique (comparaison insensible à la casse) */
+    private const ALIAS_COLONNES = [
+        'prix_de_vente'    => 'prix_vente',
+        'prix_vente_fcfa'  => 'prix_vente',
+        'prix_dachat'      => 'prix_achat',
+        'prix_d_achat'     => 'prix_achat',
+        'prix_achat_fcfa'  => 'prix_achat',
+        'qte_stock'        => 'quantite_stock',
+        'stock'            => 'quantite_stock',
+        'alerte'           => 'seuil_alerte',
+        'ref'              => 'reference',
+        'categorie_produit' => 'categorie',
+    ];
+
+    private const CHAMPS_NUMERIQUES = ['prix_achat', 'prix_vente', 'quantite_stock', 'seuil_alerte'];
 
     public function __construct(int $boutiqueId)
     {
@@ -40,35 +63,128 @@ class ProduitsImport implements ToCollection, WithHeadingRow, WithValidation, Sk
     public function collection(Collection $lignes): void
     {
         foreach ($lignes as $index => $ligne) {
-            $numeroLigne = $index + 2; // +1 pour l'en-tête, +1 pour l'index 0-based
+            $numeroLigne = $index + 2;
+            $data = $this->normaliser($ligne->toArray());
 
             try {
-                $categorieId = null;
-                $nomCategorie = trim((string) ($ligne['categorie'] ?? ''));
-
-                if ($nomCategorie !== '') {
-                    $categorieId = $this->resoudreCategorie($nomCategorie);
+                $nom = trim((string) ($data['nom'] ?? ''));
+                if ($nom === '') {
+                    $this->ignorer($numeroLigne, 'nom manquant.');
+                    continue;
                 }
 
-                Produit::create([
-                    'boutique_id' => $this->boutiqueId,
-                    'categorie_id' => $categorieId,
-                    'nom' => trim((string) $ligne['nom']),
-                    'reference' => $ligne['reference'] ?? null,
-                    'prix_achat' => (float) ($ligne['prix_achat'] ?? 0),
-                    'prix_vente' => (float) $ligne['prix_vente'],
-                    'quantite_stock' => (int) ($ligne['quantite_stock'] ?? 0),
-                    'seuil_alerte' => (int) ($ligne['seuil_alerte'] ?? 5),
-                ]);
+                if (!isset($data['prix_vente']) || $data['prix_vente'] === null) {
+                    $this->ignorer($numeroLigne, 'prix de vente manquant ou illisible.');
+                    continue;
+                }
 
+                $categorieId = null;
+                $nomCategorie = trim((string) ($data['categorie'] ?? ''));
+                if ($nomCategorie !== '') {
+                    $categorieId = $this->resoudreCategorie($nomCategorie, $numeroLigne);
+                }
+
+                $reference = trim((string) ($data['reference'] ?? ''));
+                $reference = $reference !== '' ? $reference : null;
+
+                $attributs = [
+                    'boutique_id'    => $this->boutiqueId,
+                    'categorie_id'   => $categorieId,
+                    'nom'            => $nom,
+                    'reference'      => $reference,
+                    'prix_achat'     => $data['prix_achat'] ?? 0.0,
+                    'prix_vente'     => $data['prix_vente'],
+                    'quantite_stock' => (int) ($data['quantite_stock'] ?? 0),
+                    'seuil_alerte'   => (int) ($data['seuil_alerte'] ?? 5),
+                ];
+
+                // Référence déjà existante pour cette boutique -> mise à jour
+                // plutôt qu'échec sur contrainte unique.
+                if ($reference !== null) {
+                    $produit = Produit::where('boutique_id', $this->boutiqueId)
+                        ->where('reference', $reference)
+                        ->first();
+
+                    if ($produit) {
+                        $produit->update($attributs);
+                        $this->nombreImportes++;
+                        continue;
+                    }
+                }
+
+                Produit::create($attributs);
                 $this->nombreImportes++;
-            } catch (\Throwable $e) {
-                $this->erreurs[] = "Ligne {$numeroLigne} : ".$e->getMessage();
+            } catch (QueryException $e) {
+                $this->ignorer($numeroLigne, $this->messageErreurSql($e));
+            } catch (Throwable $e) {
+                $this->ignorer($numeroLigne, $e->getMessage());
             }
         }
     }
 
-    private function resoudreCategorie(string $nom): int
+    private function ignorer(int $numeroLigne, string $message): void
+    {
+        $this->nombreIgnores++;
+        $this->erreurs[] = "Ligne {$numeroLigne} : {$message}";
+    }
+
+    /**
+     * Normalise une ligne : clés (alias + insensible à la casse), texte
+     * (trim), nombres (espaces, devise, virgule décimale française).
+     */
+    private function normaliser(array $data): array
+    {
+        $clesMinuscules = [];
+        foreach (array_keys($data) as $cle) {
+            $clesMinuscules[mb_strtolower(trim((string) $cle))] = $cle;
+        }
+
+        foreach (self::ALIAS_COLONNES as $depuisMin => $vers) {
+            if (!isset($clesMinuscules[$depuisMin])) {
+                continue;
+            }
+            $versMin = mb_strtolower($vers);
+            if (!isset($clesMinuscules[$versMin])) {
+                $data[$vers] = $data[$clesMinuscules[$depuisMin]];
+                $clesMinuscules[$versMin] = $vers;
+            }
+        }
+
+        foreach (['nom', 'reference', 'categorie'] as $champ) {
+            if (isset($data[$champ]) && is_string($data[$champ])) {
+                $data[$champ] = trim($data[$champ]);
+            }
+        }
+
+        foreach (self::CHAMPS_NUMERIQUES as $champ) {
+            if (array_key_exists($champ, $data)) {
+                $data[$champ] = $this->versNombre($data[$champ]);
+            }
+        }
+
+        return $data;
+    }
+
+    /** Convertit une valeur "sale" en float, ou null si illisible. */
+    private function versNombre($valeur): ?float
+    {
+        if ($valeur === null || $valeur === '') {
+            return null;
+        }
+        if (is_int($valeur) || is_float($valeur)) {
+            return (float) $valeur;
+        }
+
+        $texte = trim(str_replace(["\xc2\xa0", ' ', 'FCFA', 'F CFA', 'XOF', '€', '$'], '', (string) $valeur));
+
+        if (preg_match('/^-?\d+,\d+$/', $texte)) {
+            $texte = str_replace(',', '.', $texte); // format FR "15000,50"
+        }
+
+        return is_numeric($texte) ? (float) $texte : null;
+    }
+
+    private function resoudreCategorie(string $nom, int $numeroLigne): ?int
     {
         $cle = mb_strtolower($nom);
 
@@ -76,30 +192,72 @@ class ProduitsImport implements ToCollection, WithHeadingRow, WithValidation, Sk
             return $this->categoriesCache[$cle];
         }
 
-        $categorie = Categorie::firstOrCreate(
-            ['boutique_id' => $this->boutiqueId, 'nom' => $nom]
-        );
-
-        return $this->categoriesCache[$cle] = $categorie->id;
+        try {
+            $categorie = Categorie::firstOrCreate(
+                ['boutique_id' => $this->boutiqueId, 'nom' => $nom]
+            );
+            return $this->categoriesCache[$cle] = $categorie->id;
+        } catch (Throwable $e) {
+            $this->erreurs[] = "Ligne {$numeroLigne} : catégorie « {$nom} » invalide, produit importé sans catégorie.";
+            return null;
+        }
     }
 
     /**
-     * Validation ligne par ligne — les lignes invalides sont écartées avec
-     * un message clair plutôt que de faire échouer tout le fichier.
+     * Traduit un code d'erreur SQL PostgreSQL (SQLSTATE, portable) en
+     * message compréhensible pour l'utilisateur.
      */
+    private function messageErreurSql(QueryException $e): string
+    {
+        $sqlState = $e->errorInfo[0] ?? null;
+
+        return match ($sqlState) {
+            '23505' => 'référence déjà utilisée pour cette boutique.',   // unique_violation
+            '23503' => 'catégorie ou boutique invalide.',                // foreign_key_violation
+            '23502' => 'un champ obligatoire est manquant en base.',     // not_null_violation
+            '22003' => 'valeur numérique hors limites (prix ou quantité trop grand).', // numeric_value_out_of_range
+            default => 'erreur base de données lors de l\'enregistrement.',
+        };
+    }
+
+    /** Normalise chaque ligne avant que WithValidation ne l'évalue. */
+    public function prepareForValidation($data, $index)
+    {
+        return $this->normaliser($data);
+    }
+
     public function rules(): array
     {
         return [
             'nom' => ['required', 'string', 'max:255'],
-            'prix_vente' => ['required', 'numeric', 'min:0'],
+            'prix_vente' => ['nullable', 'numeric', 'min:0'],
             'prix_achat' => ['nullable', 'numeric', 'min:0'],
             'quantite_stock' => ['nullable', 'integer', 'min:0'],
             'seuil_alerte' => ['nullable', 'integer', 'min:0'],
         ];
     }
 
-    public function onError(\Throwable $e): void
+    public function customValidationMessages(): array
     {
-        $this->erreurs[] = $e->getMessage();
+        return [
+            'nom.required' => 'le nom du produit est obligatoire.',
+            'prix_vente.numeric' => 'le prix de vente doit être un nombre.',
+            'prix_achat.numeric' => "le prix d'achat doit être un nombre.",
+        ];
+    }
+
+    /** Empêche une ligne invalide de stopper tout l'import. */
+    public function onFailure(Failure ...$failures): void
+    {
+        foreach ($failures as $failure) {
+            $this->ignorer($failure->row(), implode(' ', $failure->errors()));
+        }
+    }
+
+    /** Empêche une exception imprévue de stopper tout l'import. */
+    public function onError(Throwable $e): void
+    {
+        $this->nombreIgnores++;
+        $this->erreurs[] = 'Erreur inattendue : '.$e->getMessage();
     }
 }
