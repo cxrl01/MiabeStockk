@@ -171,11 +171,6 @@ const FAQ = [
   },
 ];
 
-const LEDGER_SEED = [
-  { id: 1, type: 'dette', label: 'Ama Mensah', note: '2 sacs de riz, 1 bidon d’huile', montant: 3500 },
-];
-const PAIEMENTS_QUEUE = [1500, 1200, 800];
-
 /* ------------------------------------------------------------------ */
 /* Utilitaires                                                          */
 /* ------------------------------------------------------------------ */
@@ -229,121 +224,6 @@ function Reveal({ children, delay = 0, className = '' }) {
       style={{ transitionDelay: visible ? `${delay}ms` : '0ms' }}
     >
       {children}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Le carnet — démo interactive du suivi de dettes (mécanique réelle)  */
-/* ------------------------------------------------------------------ */
-
-function LedgerDemo() {
-  const [entries, setEntries] = useState(LEDGER_SEED);
-  const [queue, setQueue] = useState(PAIEMENTS_QUEUE);
-
-  const solde = entries.reduce((acc, e) => acc + (e.type === 'dette' ? e.montant : -e.montant), 0);
-  const soldeZero = solde <= 0;
-
-  const handlePayment = () => {
-    if (queue.length === 0) return;
-    const [montant, ...rest] = queue;
-    setEntries((prev) => [
-      ...prev,
-      {
-        id: prev.length + 1,
-        type: 'paiement',
-        label: 'Ama Mensah',
-        note: 'Paiement enregistré',
-        montant,
-      },
-    ]);
-    setQueue(rest);
-  };
-
-  const handleReset = () => {
-    setEntries(LEDGER_SEED);
-    setQueue(PAIEMENTS_QUEUE);
-  };
-
-  return (
-    <div
-      className="relative mx-auto w-full max-w-sm rotate-1 motion-safe:transition-transform motion-safe:duration-500
-        [@media(hover:hover)]:hover:rotate-0 active:rotate-0"
-    >
-      <div className="absolute -top-2.5 left-8 right-8 z-10 flex justify-between">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <span key={i} className="h-3 w-3 rounded-full bg-paper ring-2 ring-ink900/15" />
-        ))}
-      </div>
-
-      <div
-        className="overflow-hidden rounded-lg border border-ink900/10 bg-[#FBF8F1] pt-6 shadow-[0_28px_60px_-20px_rgba(21,39,71,0.4)]"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(to bottom, transparent, transparent 30px, rgba(30,63,115,0.14) 31px)',
-          backgroundPosition: '0 46px',
-        }}
-      >
-        <div className="relative px-6 pb-2">
-          <span className="absolute left-3 top-0 h-full w-px bg-danger/35" />
-          <p className="pl-4 font-mono text-[10px] uppercase tracking-[0.16em] text-ink900/40">
-            Fiche client — dette
-          </p>
-          <p className="pl-4 font-display text-sm font-semibold text-ink900">Ama Mensah</p>
-        </div>
-
-        <div className="relative space-y-1 px-6 pb-3">
-          <span className="absolute left-3 top-0 h-full w-px bg-danger/35" />
-          {entries.map((e) => (
-            <div key={e.id} className="flex items-baseline justify-between gap-3 pl-4 text-sm">
-              <span className="min-w-0 text-ink900/70">
-                <span className="text-ink900/40">{e.type === 'dette' ? 'Achat — ' : 'Payé — '}</span>
-                {e.note}
-              </span>
-              <span
-                className={`shrink-0 font-mono text-xs ${
-                  e.type === 'dette' ? 'text-danger' : 'text-success'
-                }`}
-              >
-                {e.type === 'dette' ? '+' : '−'}
-                {e.montant.toLocaleString('fr-FR')} F
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="relative border-t border-dashed border-ink900/20 px-6 py-4">
-          <span className="absolute left-3 top-0 h-full w-px bg-danger/35" />
-          <div className="flex items-center justify-between pl-4">
-            <span className="text-xs font-medium uppercase tracking-wide text-ink900/50">
-              Dette restante
-            </span>
-            <span className={`font-mono text-lg font-semibold ${soldeZero ? 'text-success' : 'text-ink900'}`}>
-              {soldeZero ? 'Soldée ✓' : `${solde.toLocaleString('fr-FR')} F`}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-center gap-3">
-        <Button
-          variant="boutique"
-          onClick={handlePayment}
-          disabled={queue.length === 0}
-          className="touch-manipulation px-4 py-2 text-sm active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {queue.length === 0 ? 'Compte soldé' : 'Enregistrer un paiement'}
-        </Button>
-        {queue.length === 0 && (
-          <button
-            type="button"
-            onClick={handleReset}
-            className="touch-manipulation font-mono text-xs text-ink900/40 underline-offset-2 hover:text-ink900/70 hover:underline active:text-ink900/70"
-          >
-            Rejouer
-          </button>
-        )}
-      </div>
     </div>
   );
 }
@@ -516,41 +396,34 @@ export default function Home() {
 
       {/* Hero */}
       <section
-        className={`relative z-10 mx-auto grid max-w-6xl gap-14 px-6 pb-16 pt-14 motion-safe:transition-all motion-safe:duration-700 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center ${
+        className={`relative z-10 mx-auto max-w-3xl px-6 pb-16 pt-14 text-center motion-safe:transition-all motion-safe:duration-700 sm:pt-20 ${
           mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}
       >
-        <div className="text-center lg:text-left">
-          <p className="mb-5 font-mono text-xs uppercase tracking-[0.22em] text-ochre-600">
-            Fini le cahier qui se perd
-          </p>
-          <h1 className="font-display text-3xl font-semibold leading-[1.12] tracking-tight text-ink900 sm:text-5xl lg:text-6xl">
-            Le carnet de votre boutique,
-            <br />
-            <em className="not-italic text-indigo-700">enfin incassable.</em>
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-ink900/60 sm:text-lg lg:mx-0">
-            Stock, ventes, dettes clients et trésorerie — dans un carnet numérique que vous ne
-            perdrez jamais, et que vous n&apos;oublierez jamais d&apos;emporter.
-          </p>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-            <Link to="/inscription" className="touch-manipulation">
-              <Button variant="boutique" className="px-6 py-3 text-base active:scale-95">
-                Créer ma boutique
-              </Button>
-            </Link>
-            <a href="#features" className="touch-manipulation">
-              <Button variant="ghost" className="border-indigo-700/25 px-6 py-3 text-base text-indigo-700 active:scale-95">
-                Voir les fonctionnalités
-              </Button>
-            </a>
-          </div>
-          <p className="mt-6 text-xs text-ink900/40">
-            À droite : la fiche dette d&apos;Ama Mensah, mise à jour en direct.
-          </p>
+        <p className="mb-5 font-mono text-xs uppercase tracking-[0.22em] text-ochre-600">
+          Fini le cahier qui se perd
+        </p>
+        <h1 className="font-display text-3xl font-semibold leading-[1.12] tracking-tight text-ink900 sm:text-5xl lg:text-6xl">
+          Le carnet de votre boutique,
+          <br />
+          <em className="not-italic text-indigo-700">enfin incassable.</em>
+        </h1>
+        <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-ink900/60 sm:text-lg">
+          Stock, ventes, dettes clients et trésorerie — dans un carnet numérique que vous ne
+          perdrez jamais, et que vous n&apos;oublierez jamais d&apos;emporter.
+        </p>
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <Link to="/inscription" className="touch-manipulation">
+            <Button variant="boutique" className="px-6 py-3 text-base active:scale-95">
+              Créer ma boutique
+            </Button>
+          </Link>
+          <a href="#features" className="touch-manipulation">
+            <Button variant="ghost" className="border-indigo-700/25 px-6 py-3 text-base text-indigo-700 active:scale-95">
+              Voir les fonctionnalités
+            </Button>
+          </a>
         </div>
-
-        <LedgerDemo />
       </section>
 
       {/* Trust */}
