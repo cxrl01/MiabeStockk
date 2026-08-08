@@ -41,11 +41,21 @@ class VentePolicy
             && $user->role->nom === 'gerant';
     }
 
-    // "Encaisser" (Tableau 6) = Gérant + Commercial, comme create().
+    // "Encaisser" (Tableau 6) = Gérant + Commercial pour une vente.
+    // Pour une livraison, le paiement au fournisseur relève de la gestion des
+    // fournisseurs (Tableau 6 : Gérant + Gestionnaire), pas de l'encaissement
+    // client — d'où la distinction selon le type de commande.
     public function enregistrerPaiement(User $user, Commande $commande): bool
     {
-        return $user->appartientABoutique($commande->boutique_id)
-            && in_array($user->role->nom, ['gerant', 'commercial']);
+        if (! $user->appartientABoutique($commande->boutique_id)) {
+            return false;
+        }
+
+        if ($commande->type === 'livraison') {
+            return in_array($user->role->nom, ['gerant', 'gestionnaire']);
+        }
+
+        return in_array($user->role->nom, ['gerant', 'commercial']);
     }
 
     // Tableau 6 du mémoire : "Générer PDF" appartient au Gérant et au

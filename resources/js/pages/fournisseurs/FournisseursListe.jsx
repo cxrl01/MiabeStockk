@@ -135,7 +135,9 @@ export default function FournisseursListe() {
               const aDette = Number(f.dette) > 0;
               return (
                 <tr key={f.id} className="border-b border-ink900/5 last:border-0 hover:bg-ink900/[0.02]">
-                  <td className="px-5 py-3.5 text-ink900 font-medium">{f.nom}</td>
+                  <td className="px-5 py-3.5 text-ink900 font-medium">
+                    <Link to={`/fournisseurs/${f.id}`} className="hover:underline">{f.nom}</Link>
+                  </td>
                   <td className="px-5 py-3.5 text-ink900/60">{f.telephone || '—'}</td>
                   <td className="px-5 py-3.5 text-ink900/60">{f.adresse || '—'}</td>
                   <td className="px-5 py-3.5 text-ink900/60">{f.conditions_paiement || '—'}</td>

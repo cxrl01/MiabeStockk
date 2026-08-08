@@ -17,6 +17,7 @@ import ClientForm from '../pages/clients/ClientForm';
 import ClientDetail from '../pages/clients/ClientDetail';
 import FournisseursListe from '../pages/fournisseurs/FournisseursListe';
 import FournisseurForm from '../pages/fournisseurs/FournisseurForm';
+import FournisseursDetail from '../pages/fournisseurs/FournisseursDetail';
 import NouvelleLivraison from '../pages/fournisseurs/NouvelleLivraison';
 import EquipeListe from '../pages/equipe/EquipeListe';
 import EmployeForm from '../pages/equipe/EmployeForm';
@@ -95,6 +96,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/fournisseurs/:id" element={<ProtectedRoute><FournisseursDetail /></ProtectedRoute>} />
       <Route
         path="/fournisseurs/:id/modifier"
         element={
