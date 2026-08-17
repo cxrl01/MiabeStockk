@@ -70,11 +70,17 @@ class FournisseurController extends Controller
 
         // Requete directe sur Commande plutot qu'une relation Fournisseur::commandes()
         // dont je n'ai pas confirme l'existence sur ton modele Fournisseur reel.
+        //
+        // Ajout : eager loading de lignes.produit pour exposer le detail des
+        // produits/quantites de chaque livraison au frontend. La colonne
+        // 'fournisseur_id' est explicitement selectionnee car necessaire au
+        // eager loading meme quand on restreint les colonnes de Commande.
         $livraisons = Commande::query()
             ->where('fournisseur_id', $fournisseur->id)
             ->where('type', 'livraison')
+            ->with('lignes.produit:id,nom')
             ->latest()
-            ->get(['id', 'numero', 'montant_ttc', 'montant_paye', 'statut', 'statut_paiement', 'created_at']);
+            ->get(['id', 'fournisseur_id', 'numero', 'montant_ttc', 'montant_paye', 'statut', 'statut_paiement', 'created_at']);
 
         return response()->json([
             'fournisseur' => $fournisseur,

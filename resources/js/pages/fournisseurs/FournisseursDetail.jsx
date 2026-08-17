@@ -20,6 +20,9 @@ export default function FournisseursDetail() {
   const [livraisons, setLivraisons] = useState([]);
   const [erreur, setErreur] = useState('');
 
+  // Détail produits/quantités par livraison (accordéon)
+  const [livraisonOuverte, setLivraisonOuverte] = useState(null);
+
   // Paiement d'une livraison précise
   const [livraisonAPayer, setLivraisonAPayer] = useState(null);
   const [montantPaiement, setMontantPaiement] = useState('');
@@ -37,6 +40,10 @@ export default function FournisseursDetail() {
   };
 
   useEffect(charger, [id]);
+
+  const basculerDetail = (livraisonId) => {
+    setLivraisonOuverte((actuel) => (actuel === livraisonId ? null : livraisonId));
+  };
 
   const ouvrirPaiement = (livraison) => {
     const solde = Number(livraison.montant_ttc) - Number(livraison.montant_paye);
@@ -143,33 +150,62 @@ export default function FournisseursDetail() {
           <div className="space-y-3">
             {livraisons.map((l) => {
               const solde = Number(l.montant_ttc) - Number(l.montant_paye);
+              const estOuverte = livraisonOuverte === l.id;
+              const nbProduits = l.lignes?.length ?? 0;
+
               return (
                 <div
                   key={l.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-ink900/10 rounded-lg p-4"
+                  className="border border-ink900/10 rounded-lg p-4"
                 >
-                  <div>
-                    <p className="text-sm font-medium text-ink900">
-                      {l.numero} — {new Date(l.created_at).toLocaleDateString('fr-FR')}
-                    </p>
-                    <p className="text-xs text-ink900/40 mt-0.5">
-                      Total {formatMontant(l.montant_ttc)} · Payé {formatMontant(l.montant_paye)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`font-mono text-sm font-semibold ${solde > 0 ? 'text-danger' : 'text-success'}`}>
-                      {solde > 0 ? `Reste ${formatMontant(solde)}` : 'Soldé'}
-                    </span>
-                    {solde > 0 && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
                       <button
                         type="button"
-                        onClick={() => ouvrirPaiement(l)}
-                        className="text-sm font-medium text-indigo-700 hover:underline whitespace-nowrap"
+                        onClick={() => basculerDetail(l.id)}
+                        className="text-sm font-medium text-ink900 hover:text-indigo-700 text-left"
                       >
-                        Payer
+                        {l.numero} — {new Date(l.created_at).toLocaleDateString('fr-FR')}
+                        <span className="text-ink900/40 font-normal ml-2">
+                          ({nbProduits} produit{nbProduits > 1 ? 's' : ''})
+                        </span>
                       </button>
-                    )}
+                      <p className="text-xs text-ink900/40 mt-0.5">
+                        Total {formatMontant(l.montant_ttc)} · Payé {formatMontant(l.montant_paye)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`font-mono text-sm font-semibold ${solde > 0 ? 'text-danger' : 'text-success'}`}>
+                        {solde > 0 ? `Reste ${formatMontant(solde)}` : 'Soldé'}
+                      </span>
+                      {solde > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => ouvrirPaiement(l)}
+                          className="text-sm font-medium text-indigo-700 hover:underline whitespace-nowrap"
+                        >
+                          Payer
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {estOuverte && (
+                    <div className="mt-3 pt-3 border-t border-ink900/10 space-y-1.5">
+                      {nbProduits === 0 ? (
+                        <p className="text-xs text-ink900/40">Aucun détail de produit disponible.</p>
+                      ) : (
+                        l.lignes.map((ligne) => (
+                          <div key={ligne.id} className="flex justify-between text-sm">
+                            <span className="text-ink900/70">{ligne.produit?.nom ?? 'Produit'}</span>
+                            <span className="text-ink900/50">
+                              {ligne.quantite} × {formatMontant(ligne.prix_unitaire)}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
