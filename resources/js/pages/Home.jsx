@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Button from '../components/ui/Button';
 
 /* ------------------------------------------------------------------ */
-/* Données — uniquement des fonctionnalités réellement construites     */
+/* Données, uniquement des fonctionnalités réellement construites      */
 /* ------------------------------------------------------------------ */
 
 const TRUST = [
@@ -48,7 +48,7 @@ const FEATURES = [
   {
     titre: 'Import Excel du catalogue',
     texte:
-      "Des centaines de produits à ajouter ? Un seul fichier Excel suffit — plus besoin de les saisir un par un, ligne par ligne.",
+      "Des centaines de produits à ajouter ? Un seul fichier Excel suffit, plus besoin de les saisir un par un, ligne par ligne.",
     icon: (
       <>
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -108,7 +108,7 @@ const FEATURES = [
   {
     titre: 'Dépenses & trésorerie',
     texte:
-      'Loyer, salaires, achats de stock — suivez ce qui sort de la caisse au même endroit que ce qui y entre.',
+      'Loyer, salaires, achats de stock, suivez ce qui sort de la caisse au même endroit que ce qui y entre.',
     icon: (
       <>
         <line x1="12" y1="1" x2="12" y2="23" />
@@ -139,7 +139,7 @@ const STEPS = [
   {
     num: '02',
     titre: 'Importez votre catalogue',
-    texte: 'Un fichier Excel avec vos produits, prix et quantités — ou ajoutez-les un par un si vous préférez.',
+    texte: 'Un fichier Excel avec vos produits, prix et quantités, ou ajoutez-les un par un si vous préférez.',
   },
   {
     num: '03',
@@ -163,11 +163,11 @@ const FAQ = [
   },
   {
     q: 'Mes données sont-elles isolées des autres boutiques ?',
-    a: 'Oui. Chaque boutique dispose de son espace entièrement isolé — aucun autre utilisateur externe ne peut y accéder.',
+    a: 'Oui. Chaque boutique dispose de son espace entièrement isolé, aucun autre utilisateur externe ne peut y accéder.',
   },
   {
     q: "Dois-je saisir mon catalogue produit par produit ?",
-    a: "Non, vous pouvez importer tout votre catalogue d'un coup depuis un fichier Excel — pratique si vous avez déjà une liste de produits.",
+    a: "Non, vous pouvez importer tout votre catalogue d'un coup depuis un fichier Excel, pratique si vous avez déjà une liste de produits.",
   },
 ];
 
@@ -310,7 +310,7 @@ function PiedDePage() {
               className="mt-6 font-mono text-xs text-indigo-700"
               title="« Bienvenue » en langue éwé, parlée à Lomé"
             >
-              Woezor 👋 — Lomé, Togo
+              Woezor 👋, Lomé, Togo
             </p>
           </div>
 
@@ -340,7 +340,7 @@ function PiedDePage() {
 
         <div className="mt-14 flex flex-col gap-4 border-t border-indigo-800/60 pt-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-mono text-xs text-indigo-700">
-            © {new Date().getFullYear()} MiabeStock — Tous droits réservés
+            © {new Date().getFullYear()} MiabeStock, Tous droits réservés
           </p>
           <p className="font-mono text-xs text-indigo-700">
             Application de gestion commerciale multi-boutique
@@ -409,7 +409,7 @@ export default function Home() {
           <em className="not-italic text-indigo-700">enfin incassable.</em>
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-ink900/60 sm:text-lg">
-          Stock, ventes, dettes clients et trésorerie — dans un carnet numérique que vous ne
+          Stock, ventes, dettes clients et trésorerie, dans un carnet numérique que vous ne
           perdrez jamais, et que vous n&apos;oublierez jamais d&apos;emporter.
         </p>
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
@@ -510,7 +510,7 @@ export default function Home() {
           Prenez le contrôle de votre commerce dès aujourd&apos;hui
         </h2>
         <p className="mx-auto mt-4 max-w-md text-indigo-500">
-          Rejoignez les commerçants qui pilotent leur activité avec précision — sans complexité
+          Rejoignez les commerçants qui pilotent leur activité avec précision, sans complexité
           inutile.
         </p>
         <Link to="/inscription" className="touch-manipulation mt-8 inline-block">
