@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="top" x1="10" y1="19.5" x2="54" y2="19.5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2D5590"/>
+      <stop offset="1" stop-color="#D6A94A"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#101B33"/>
+  <g>
+    <polygon points="32,8 54,19.5 32,31 10,19.5" fill="url(#top)"/>
+    <polygon points="10,19.5 32,31 32,55 10,43.5" fill="#1E3F73"/>
+    <polygon points="54,19.5 32,31 32,55 54,43.5" fill="#BE9236"/>
+  </g>
+</svg>
