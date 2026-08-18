@@ -7,6 +7,25 @@ const POINTS_CLES = [
   { label: 'Stock suivi en temps réel', valeur: 'Alertes automatiques' },
 ];
 
+/* Logo cube (mêmes proportions/couleurs que le favicon : face gauche indigo,
+   face droite gold, face du dessus en dégradé). */
+function LogoCube({ className = 'h-8 w-8' }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="logoCubeTop" x1="10" y1="19.5" x2="54" y2="19.5" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#2D5590" />
+          <stop offset="1" stopColor="#D6A94A" />
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="14" fill="#101B33" />
+      <polygon points="32,8 54,19.5 32,31 10,19.5" fill="url(#logoCubeTop)" />
+      <polygon points="10,19.5 32,31 32,55 10,43.5" fill="#1E3F73" />
+      <polygon points="54,19.5 32,31 32,55 54,43.5" fill="#BE9236" />
+    </svg>
+  );
+}
+
 function PanneauVitrine() {
   return (
     <div className="relative hidden lg:flex flex-col justify-between w-[440px] shrink-0 bg-indigo-700 px-10 py-12 text-paper overflow-hidden">
@@ -20,9 +39,12 @@ function PanneauVitrine() {
       />
 
       <div className="relative z-10">
-        <span className="font-display text-xl font-semibold tracking-tight">
-          <span className="text-paper">Miabé</span>
-          <span className="text-ochre-400">Stock</span>
+        <span className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight">
+          <LogoCube className="h-8 w-8" />
+          <span>
+            <span className="text-paper">Miabé</span>
+            <span className="text-ochre-400">Stock</span>
+          </span>
         </span>
 
         <h1 className="mt-10 font-display text-3xl font-semibold leading-tight">
@@ -91,10 +113,13 @@ export default function AuthLayout({ title, subtitle, children, footer, showcase
             {!showcase && (
               <Link
                 to="/"
-                className="mb-8 flex justify-center font-display text-xl font-semibold tracking-tight text-ink900"
+                className="mb-8 flex items-center justify-center gap-2 font-display text-xl font-semibold tracking-tight text-ink900"
               >
-                <span className="text-indigo-600">Miabé</span>
-                <span className="text-ochre-500">Stock</span>
+                <LogoCube className="h-7 w-7" />
+                <span>
+                  <span className="text-indigo-600">Miabé</span>
+                  <span className="text-ochre-500">Stock</span>
+                </span>
               </Link>
             )}
 

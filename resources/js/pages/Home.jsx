@@ -192,6 +192,26 @@ function Icon({ children, className = 'h-5 w-5' }) {
   );
 }
 
+/* Logo cube (mêmes proportions/couleurs que le favicon : face gauche indigo,
+   face droite gold, face du dessus en dégradé). Inline en SVG plutôt qu'un
+   <img src="/favicon.svg">, pour éviter une requête réseau supplémentaire. */
+function LogoCube({ className = 'h-8 w-8' }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="logoCubeTop" x1="10" y1="19.5" x2="54" y2="19.5" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#2D5590" />
+          <stop offset="1" stopColor="#D6A94A" />
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="14" fill="#101B33" />
+      <polygon points="32,8 54,19.5 32,31 10,19.5" fill="url(#logoCubeTop)" />
+      <polygon points="10,19.5 32,31 32,55 10,43.5" fill="#1E3F73" />
+      <polygon points="54,19.5 32,31 32,55 54,43.5" fill="#BE9236" />
+    </svg>
+  );
+}
+
 function useReveal(threshold = 0.2) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -299,8 +319,9 @@ function PiedDePage() {
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <Link to="/" className="font-display text-2xl font-semibold tracking-tight">
-              Miabé<span className="text-ochre-500">Stock</span>
+            <Link to="/" className="flex items-center gap-2.5 font-display text-2xl font-semibold tracking-tight">
+              <LogoCube className="h-8 w-8" />
+              <span>Miabé<span className="text-ochre-500">Stock</span></span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-indigo-500">
               Le carnet de votre boutique, enfin numérique. Ventes, stock, dettes clients et
@@ -378,9 +399,10 @@ export default function Home() {
       <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between border-b border-dashed border-ink900/15 px-6 py-5">
         <Link
           to="/"
-          className="touch-manipulation font-display text-2xl font-semibold tracking-tight text-indigo-700 sm:text-3xl"
+          className="touch-manipulation flex items-center gap-2.5 font-display text-2xl font-semibold tracking-tight text-indigo-700 sm:text-3xl"
         >
-          Miabé<span className="text-ochre-500">Stock</span>
+          <LogoCube className="h-8 w-8 sm:h-9 sm:w-9" />
+          <span>Miabé<span className="text-ochre-500">Stock</span></span>
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
           <Link to="/connexion" className="touch-manipulation">
