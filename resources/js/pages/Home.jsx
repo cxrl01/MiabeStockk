@@ -396,22 +396,22 @@ export default function Home() {
       />
 
       {/* Nav */}
-      <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between border-b border-dashed border-ink900/15 px-6 py-5">
+      <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between border-b border-dashed border-ink900/15 px-4 py-4 sm:px-6 sm:py-5">
         <Link
           to="/"
-          className="touch-manipulation flex items-center gap-2.5 font-display text-2xl font-semibold tracking-tight text-indigo-700 sm:text-3xl"
+          className="touch-manipulation flex min-w-0 items-center gap-1.5 font-display text-lg font-semibold tracking-tight text-indigo-700 sm:gap-2.5 sm:text-2xl lg:text-3xl"
         >
-          <LogoCube className="h-8 w-8 sm:h-9 sm:w-9" />
-          <span>Miabé<span className="text-ochre-500">Stock</span></span>
+          <LogoCube className="h-6 w-6 shrink-0 sm:h-8 sm:w-8 lg:h-9 lg:w-9" />
+          <span className="truncate">Miabé<span className="text-ochre-500">Stock</span></span>
         </Link>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
           <Link to="/connexion" className="touch-manipulation">
-            <Button variant="ghost" className="px-4 py-2 text-sm text-ink900/70 active:scale-95 sm:px-5 sm:py-2.5">
+            <Button variant="ghost" className="px-2.5 py-1.5 text-xs text-ink900/70 active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm">
               Connexion
             </Button>
           </Link>
           <Link to="/inscription" className="touch-manipulation">
-            <Button variant="boutique" className="px-4 py-2 text-sm active:scale-95 sm:px-5 sm:py-2.5">Créer ma boutique</Button>
+            <Button variant="boutique" className="px-2.5 py-1.5 text-xs active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm">S'inscrire</Button>
           </Link>
         </div>
       </nav>
