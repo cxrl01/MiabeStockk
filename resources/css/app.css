@@ -26,7 +26,6 @@
     --color-danger: #C0392B;
     --color-warning: #C97F2E;
 }
-
 /* Mode sombre : on ne redéfinit que les variables, les classes Tailwind
    (bg-paper, text-ink900, bg-surface...) s'inversent automatiquement. */
 [data-theme='dark'] {
@@ -34,7 +33,6 @@
     --color-ink900: #F2F0EA;
     --color-surface: #1D212B;
 }
-
 /* Filet de sécurité : tout input/select/textarea brut (sans bg- explicite
    dans le composant) hérite du bon fond selon le thème actif, sans avoir
    à modifier chaque formulaire un par un. */
@@ -45,8 +43,14 @@
         background-color: var(--color-surface);
         color: var(--color-ink900);
     }
-}
 
+    /* Edge/IE affichent un œil natif sur les champs mot de passe (::-ms-reveal) ;
+       on le désactive car un bouton œil custom existe déjà dans TextField. */
+    input[type='password']::-ms-reveal,
+    input[type='password']::-ms-clear {
+        display: none;
+    }
+}
 body {
     background-color: var(--color-paper);
     color: var(--color-ink900);

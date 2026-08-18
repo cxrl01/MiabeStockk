@@ -145,6 +145,16 @@ export const IconEye = (p) => (
   </svg>
 );
 
+export const IconEyeOff = (p) => (
+  <svg viewBox="0 0 20 20" width="18" height="18" {...base} {...p}>
+    <path d="M2.5 2.5l15 15" />
+    <path d="M8.3 8.4a2.5 2.5 0 0 0 3.4 3.4" />
+    <path d="M5.6 5.7C3.4 7.1 1.5 10 1.5 10s3 6 8.5 6c1.5 0 2.8-.4 3.9-1.1" />
+    <path d="M12.4 4.9C11.6 4.6 10.8 4.4 10 4.4c-.5 0-1 .1-1.5.2" />
+    <path d="M15.3 6.2C17 7.6 18.5 10 18.5 10s-.9 1.8-2.4 3.3" />
+  </svg>
+);
+
 export const IconBan = (p) => (
   <svg viewBox="0 0 20 20" width="18" height="18" {...base} {...p}>
     <circle cx="10" cy="10" r="7.5" />

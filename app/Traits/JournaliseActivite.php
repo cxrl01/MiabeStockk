@@ -14,14 +14,17 @@ trait JournaliseActivite
      */
     protected function journaliser(string $action, $sujet = null, array $donnees = []): void
     {
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'boutique_id' => Auth::user()?->boutique_id ?? $sujet?->boutique_id ?? null,
-            'action' => $action,
-            'sujet_type' => $sujet ? get_class($sujet) : null,
-            'sujet_id' => $sujet?->id,
-            'donnees' => $donnees,
-            'ip_adresse' => RequestFacade::ip(),
-        ]);
+    $boutiqueId = Auth::user()?->boutique_id
+        ?? ($sujet instanceof \App\Models\Boutique ? $sujet->id : $sujet?->boutique_id);
+
+    ActivityLog::create([
+        'user_id' => Auth::id(),
+        'boutique_id' => $boutiqueId,
+        'action' => $action,
+        'sujet_type' => $sujet ? get_class($sujet) : null,
+        'sujet_id' => $sujet?->id,
+        'donnees' => $donnees,
+        'ip_adresse' => RequestFacade::ip(),
+    ]);
     }
 }

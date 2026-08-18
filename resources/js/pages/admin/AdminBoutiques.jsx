@@ -159,7 +159,7 @@ export default function AdminBoutiques() {
                 <th className="px-5 py-3 font-medium">Boutique</th>
                 <th className="px-5 py-3 font-medium">Gérant</th>
                 <th className="px-5 py-3 font-medium text-right">Utilisateurs</th>
-                <th className="px-5 py-3 font-medium text-right">CA total</th>
+                {/* <th className="px-5 py-3 font-medium text-right">CA total</th> */}
                 <th className="px-5 py-3 font-medium">Statut</th>
                 <th className="px-5 py-3 font-medium text-right">Actions</th>
               </tr>
@@ -180,7 +180,7 @@ export default function AdminBoutiques() {
                     {b.gerant ? `${b.gerant.nom} ${b.gerant.prenom ?? ''}` : '—'}
                   </td>
                   <td className="px-5 py-3.5 text-right font-mono text-ink900/70">{b.staff_count ?? 0}</td>
-                  <td className="px-5 py-3.5 text-right font-mono text-ink900 font-medium">{formatMontant(b.ca_total ?? 0)}</td>
+                  {/* <td className="px-5 py-3.5 text-right font-mono text-ink900 font-medium">{formatMontant(b.ca_total ?? 0)}</td> */}
                   <td className="px-5 py-3.5">
                     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
                       b.statut === 'active' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
