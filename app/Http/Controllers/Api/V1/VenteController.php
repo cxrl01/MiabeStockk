@@ -49,16 +49,6 @@ class VenteController extends Controller
             $query->where('statut', $request->string('statut'));
         }
 
-        // statut_paiement peut contenir plusieurs valeurs séparées par des
-        // virgules (ex: "non_payee,partielle" utilisé par le badge d'alertes
-        // du Sidebar) : on les éclate et on filtre avec whereIn plutôt qu'un
-        // simple where, sinon Laravel comparerait la colonne à la chaîne
-        // complète "non_payee,partielle" et ne matcherait jamais aucune ligne.
-        if ($request->filled('statut_paiement')) {
-            $statutsPaiement = explode(',', $request->string('statut_paiement'));
-            $query->whereIn('statut_paiement', $statutsPaiement);
-        }
-
         return response()->json($query->latest()->paginate(20));
     }
 
