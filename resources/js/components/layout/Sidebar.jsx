@@ -34,7 +34,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile, stockAle
 
   const NAV_PRINCIPAL = [
     { to: '/dashboard', label: 'Dashboard', Icon: IconDashboard, visible: true },
-    { to: '/ventes', label: 'Ventes & Produits', Icon: IconCart, visible: true, badge: ventesAlertesCount },
+    { to: '/ventes', label: 'Ventes & Produits', Icon: IconCart, visible: true },
     { to: '/stock', label: 'Stocks', Icon: IconBox, visible: true, badge: stockAlertesCount },
     { to: '/clients', label: 'Clients', Icon: IconUsers, visible: estGerant || estCommercial },
     { to: '/fournisseurs', label: 'Fournisseurs', Icon: IconTruck, visible: estGerant || estGestionnaire },
