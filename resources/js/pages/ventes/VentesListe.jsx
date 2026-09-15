@@ -20,6 +20,7 @@ export default function VentesListe() {
   // Tableau 6 du mémoire : "Créer vente"/"Encaisser"/"Générer PDF" = Gérant + Commercial
   // uniquement. Le Gestionnaire a "Consulter l'historique des ventes" (lecture seule).
   const peutVendre = ['gerant', 'commercial'].includes(user?.role?.nom);
+  const estGerant = user?.role?.nom === 'gerant';
 
   useEffect(() => {
     api
@@ -28,7 +29,17 @@ export default function VentesListe() {
       .catch(() => setErreur("Impossible de charger les ventes."));
   }, [boutiqueActiveId]);
 
-  const ventesFiltrees = (ventes || []).filter((v) => {
+  // Portée de visibilité : le Gérant voit toutes les ventes de la boutique,
+  // le Commercial ne voit que les ventes qu'il a lui-même enregistrées
+  // (champ Commande.user_id, cf. VenteController@store). Ce filtre est
+  // redondant avec le scope équivalent dans VenteController@index — c'est
+  // ce scope côté serveur qui fait foi pour la sécurité, celui-ci n'est
+  // qu'un garde-fou d'affichage.
+  const ventesVisibles = (ventes || []).filter((v) =>
+    estGerant ? true : v.user_id === user?.id
+  );
+
+  const ventesFiltrees = ventesVisibles.filter((v) => {
     const terme = recherche.toLowerCase();
     const correspondRecherche =
       v.numero.toLowerCase().includes(terme) ||
@@ -40,11 +51,11 @@ export default function VentesListe() {
     return correspondRecherche && correspondPaiement;
   });
 
-  const totalVentes = ventes?.length ?? 0;
-  const chiffreAffiche = (ventes || [])
+  const totalVentes = ventesVisibles.length;
+  const chiffreAffiche = ventesVisibles
     .filter((v) => v.statut === 'validee')
     .reduce((somme, v) => somme + Number(v.montant_ttc), 0);
-  const dettesActives = (ventes || []).filter(
+  const dettesActives = ventesVisibles.filter(
     (v) => v.statut === 'validee' && Number(v.montant_paye) < Number(v.montant_ttc)
   ).length;
 
@@ -197,14 +208,14 @@ export default function VentesListe() {
                 <td colSpan={7}>
                   <EmptyState
                     icon={<IconRecu />}
-                    title={ventes.length === 0 ? "Aucune vente pour l'instant" : "Aucune vente ne correspond"}
+                    title={ventesVisibles.length === 0 ? "Aucune vente pour l'instant" : "Aucune vente ne correspond"}
                     subtitle={
-                      ventes.length === 0
+                      ventesVisibles.length === 0
                         ? "Les transactions encaissées apparaîtront ici, réf par réf."
                         : "Essayez un autre filtre ou une autre recherche."
                     }
                     action={
-                      peutVendre && ventes.length === 0 && (
+                      peutVendre && ventesVisibles.length === 0 && (
                         <Link
                           to="/ventes/nouvelle"
                           className="text-sm font-medium text-indigo-700 hover:underline"

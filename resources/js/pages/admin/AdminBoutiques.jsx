@@ -5,6 +5,8 @@ import { IconBox, IconCheck, IconAlertTriangle, IconUsers, IconEye, IconBan, Ico
 import api from '../../services/api';
 import { formatMontant } from '../../lib/format';
 
+const TAILLE_PAGE = 10;
+
 function CarteStat({ label, valeur, Icon, couleur }) {
   const styles = {
     bleu: { bordure: 'border-t-indigo-700', icone: 'bg-indigo-700/10 text-indigo-700' },
@@ -25,13 +27,102 @@ function CarteStat({ label, valeur, Icon, couleur }) {
   );
 }
 
+/**
+ * Modale de confirmation générique pour suspendre / réactiver / supprimer une
+ * boutique. Remplace window.prompt/window.confirm/alert (qui affichent la
+ * bannière "localhost dit" du navigateur) par une UI cohérente avec le reste
+ * de l'app. `action.type` pilote le contenu : un motif texte est demandé pour
+ * suspendre/supprimer, une simple confirmation suffit pour réactiver.
+ */
+function ModaleConfirmation({ action, motif, onMotifChange, erreur, enCours, onAnnuler, onConfirmer }) {
+  if (!action) return null;
+
+  const config = {
+    suspendre: {
+      titre: `Suspendre "${action.boutique.nom}"`,
+      description: 'Un email sera envoyé au gérant avec le motif ci-dessous.',
+      demanderMotif: true,
+      libelleBouton: 'Suspendre',
+      styleBouton: 'bg-danger hover:bg-danger/90 text-white',
+    },
+    reactiver: {
+      titre: `Réactiver "${action.boutique.nom}"`,
+      description: 'Un email sera envoyé au gérant pour l\u2019informer de la réactivation.',
+      demanderMotif: false,
+      libelleBouton: 'Réactiver',
+      styleBouton: 'bg-success hover:bg-success/90 text-white',
+    },
+    supprimer: {
+      titre: `Supprimer définitivement "${action.boutique.nom}"`,
+      description: 'Cette action est irréversible. Un email sera envoyé au gérant avec le motif ci-dessous.',
+      demanderMotif: true,
+      libelleBouton: 'Supprimer définitivement',
+      styleBouton: 'bg-danger hover:bg-danger/90 text-white',
+    },
+  }[action.type];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink900/40 px-4"
+      onClick={onAnnuler}
+    >
+      <div
+        className="w-full max-w-md rounded-xl bg-surface border border-ink900/10 shadow-xl p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="font-display font-semibold text-ink900 text-lg mb-1.5">{config.titre}</h3>
+        <p className="text-sm text-ink900/60 mb-4">{config.description}</p>
+
+        {config.demanderMotif && (
+          <textarea
+            autoFocus
+            rows={3}
+            placeholder="Motif (5 caractères minimum)…"
+            value={motif}
+            onChange={(e) => onMotifChange(e.target.value)}
+            className="w-full rounded-lg border border-ink900/15 bg-surface px-3.5 py-2.5 text-sm resize-none
+              placeholder:text-ink900/35 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+          />
+        )}
+
+        {erreur && <p className="text-sm text-danger mt-2">{erreur}</p>}
+
+        <div className="flex items-center justify-end gap-3 mt-5">
+          <button
+            type="button"
+            onClick={onAnnuler}
+            disabled={enCours}
+            className="text-sm font-medium text-ink900/60 hover:text-ink900 px-3 py-2 disabled:opacity-40"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            onClick={onConfirmer}
+            disabled={enCours}
+            className={`text-sm font-medium rounded-lg px-4 py-2 transition-colors disabled:opacity-50 ${config.styleBouton}`}
+          >
+            {enCours ? 'Traitement…' : config.libelleBouton}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminBoutiques() {
   const navigate = useNavigate();
   const [boutiques, setBoutiques] = useState(null);
   const [filtreStatut, setFiltreStatut] = useState('tout');
   const [recherche, setRecherche] = useState('');
   const [erreur, setErreur] = useState('');
-  const [actionEnCours, setActionEnCours] = useState(null);
+  const [pageCourante, setPageCourante] = useState(1);
+
+  // Modale de confirmation : { type: 'suspendre'|'reactiver'|'supprimer', boutique }
+  const [actionModale, setActionModale] = useState(null);
+  const [motif, setMotif] = useState('');
+  const [erreurModale, setErreurModale] = useState('');
+  const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
   const charger = () => {
     api.get('/boutiques')
@@ -41,58 +132,46 @@ export default function AdminBoutiques() {
 
   useEffect(charger, []);
 
-  const demanderMotif = (message) => {
-    const motif = window.prompt(message);
-    if (motif === null) return null;
-    if (motif.trim().length < 5) {
-      alert('Le motif doit contenir au moins 5 caractères.');
-      return undefined;
-    }
-    return motif.trim();
+  const ouvrirModale = (type, boutique) => {
+    setActionModale({ type, boutique });
+    setMotif('');
+    setErreurModale('');
   };
 
-  const suspendre = async (boutique) => {
-    const motif = demanderMotif(`Motif de la suspension de "${boutique.nom}" (envoyé par email au gérant) :`);
-    if (motif === null || motif === undefined) return;
-
-    setActionEnCours(boutique.id);
-    try {
-      await api.post(`/admin/boutiques/${boutique.id}/suspendre`, { motif });
-      charger();
-    } catch (error) {
-      alert(error?.response?.data?.message || 'Action impossible.');
-    } finally {
-      setActionEnCours(null);
-    }
+  const fermerModale = () => {
+    if (envoiEnCours) return;
+    setActionModale(null);
+    setMotif('');
+    setErreurModale('');
   };
 
-  const reactiver = async (boutique) => {
-    if (!window.confirm(`Réactiver "${boutique.nom}" ? Un email sera envoyé au gérant.`)) return;
+  const confirmerAction = async () => {
+    if (!actionModale) return;
+    const { type, boutique } = actionModale;
+    const motifRequis = type === 'suspendre' || type === 'supprimer';
 
-    setActionEnCours(boutique.id);
-    try {
-      await api.post(`/admin/boutiques/${boutique.id}/reactiver`);
-      charger();
-    } catch (error) {
-      alert(error?.response?.data?.message || 'Action impossible.');
-    } finally {
-      setActionEnCours(null);
+    if (motifRequis && motif.trim().length < 5) {
+      setErreurModale('Le motif doit contenir au moins 5 caractères.');
+      return;
     }
-  };
 
-  const supprimer = async (boutique) => {
-    const motif = demanderMotif(`Motif de suppression définitive de "${boutique.nom}" (envoyé par email au gérant) :`);
-    if (motif === null || motif === undefined) return;
-    if (!window.confirm(`Confirmer la suppression définitive de "${boutique.nom}" ? Cette action est irréversible.`)) return;
-
-    setActionEnCours(boutique.id);
+    setEnvoiEnCours(true);
+    setErreurModale('');
     try {
-      await api.delete(`/admin/boutiques/${boutique.id}`, { data: { motif } });
+      if (type === 'suspendre') {
+        await api.post(`/admin/boutiques/${boutique.id}/suspendre`, { motif: motif.trim() });
+      } else if (type === 'reactiver') {
+        await api.post(`/admin/boutiques/${boutique.id}/reactiver`);
+      } else if (type === 'supprimer') {
+        await api.delete(`/admin/boutiques/${boutique.id}`, { data: { motif: motif.trim() } });
+      }
+      setActionModale(null);
+      setMotif('');
       charger();
     } catch (error) {
-      alert(error?.response?.data?.message || 'Suppression impossible.');
+      setErreurModale(error?.response?.data?.message || 'Action impossible.');
     } finally {
-      setActionEnCours(null);
+      setEnvoiEnCours(false);
     }
   };
 
@@ -101,6 +180,20 @@ export default function AdminBoutiques() {
       .filter((b) => filtreStatut === 'tout' || b.statut === filtreStatut)
       .filter((b) => b.nom.toLowerCase().includes(recherche.toLowerCase()));
   }, [boutiques, filtreStatut, recherche]);
+
+  // Revenir à la page 1 dès que le filtre ou la recherche change la liste,
+  // sinon on peut se retrouver sur une page vide (ex: page 3 alors que le
+  // nouveau filtre ne donne plus que 1 page de résultats).
+  useEffect(() => {
+    setPageCourante(1);
+  }, [filtreStatut, recherche]);
+
+  const totalPages = Math.max(1, Math.ceil(boutiquesFiltrees.length / TAILLE_PAGE));
+
+  const boutiquesPage = useMemo(() => {
+    const debut = (pageCourante - 1) * TAILLE_PAGE;
+    return boutiquesFiltrees.slice(debut, debut + TAILLE_PAGE);
+  }, [boutiquesFiltrees, pageCourante]);
 
   const totalActives = (boutiques || []).filter((b) => b.statut === 'active').length;
   const totalSuspendues = (boutiques || []).filter((b) => b.statut === 'suspendue').length;
@@ -165,7 +258,7 @@ export default function AdminBoutiques() {
               </tr>
             </thead>
             <tbody>
-              {boutiquesFiltrees.map((b) => (
+              {boutiquesPage.map((b) => (
                 <tr key={b.id} className="border-b border-ink900/5 last:border-0 hover:bg-ink900/[0.02]">
                   <td className="px-5 py-3.5 font-mono text-ink900/50">B-{String(b.id).padStart(3, '0')}</td>
                   <td className="px-5 py-3.5">
@@ -194,15 +287,15 @@ export default function AdminBoutiques() {
                         <IconEye />
                       </button>
                       {b.statut === 'active' ? (
-                        <button onClick={() => suspendre(b)} disabled={actionEnCours === b.id} title="Suspendre" className="hover:text-danger disabled:opacity-40">
+                        <button onClick={() => ouvrirModale('suspendre', b)} title="Suspendre" className="hover:text-danger">
                           <IconBan />
                         </button>
                       ) : (
-                        <button onClick={() => reactiver(b)} disabled={actionEnCours === b.id} title="Réactiver" className="hover:text-success disabled:opacity-40">
+                        <button onClick={() => ouvrirModale('reactiver', b)} title="Réactiver" className="hover:text-success">
                           <IconCheck />
                         </button>
                       )}
-                      <button onClick={() => supprimer(b)} disabled={actionEnCours === b.id} title="Supprimer" className="hover:text-danger disabled:opacity-40">
+                      <button onClick={() => ouvrirModale('supprimer', b)} title="Supprimer" className="hover:text-danger">
                         <IconTrash />
                       </button>
                     </div>
@@ -218,7 +311,43 @@ export default function AdminBoutiques() {
             </tbody>
           </table>
         </div>
+
+        {boutiquesFiltrees.length > 0 && (
+          <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-ink900/10 text-sm text-ink900/60">
+            <p>
+              {boutiquesFiltrees.length} boutique{boutiquesFiltrees.length > 1 ? 's' : ''} · page {pageCourante} sur {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPageCourante((p) => Math.max(1, p - 1))}
+                disabled={pageCourante === 1}
+                className="rounded-lg border border-ink900/15 px-3 py-1.5 font-medium hover:bg-ink900/5 disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                Précédent
+              </button>
+              <button
+                type="button"
+                onClick={() => setPageCourante((p) => Math.min(totalPages, p + 1))}
+                disabled={pageCourante === totalPages}
+                className="rounded-lg border border-ink900/15 px-3 py-1.5 font-medium hover:bg-ink900/5 disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                Suivant
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      <ModaleConfirmation
+        action={actionModale}
+        motif={motif}
+        onMotifChange={setMotif}
+        erreur={erreurModale}
+        enCours={envoiEnCours}
+        onAnnuler={fermerModale}
+        onConfirmer={confirmerAction}
+      />
     </AppShell>
   );
 }

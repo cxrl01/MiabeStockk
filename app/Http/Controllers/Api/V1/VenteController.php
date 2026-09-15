@@ -28,6 +28,11 @@ class VenteController extends Controller
      * (header X-Boutique-Id — plus le melange de toutes ses boutiques), un
      * Super Admin peut préciser ?boutique_id= pour superviser une boutique
      * donnée.
+     *
+     * Portée par rôle en plus du scope boutique : le Gérant (et le Super
+     * Admin) voit toutes les ventes de la boutique concernée ; le Commercial
+     * ne voit que les ventes qu'il a lui-même enregistrées (Commande.user_id,
+     * cf. store()).
      */
     public function index(Request $request): JsonResponse
     {
@@ -43,6 +48,10 @@ class VenteController extends Controller
             }
         } else {
             $query->where('boutique_id', $this->boutiqueActive());
+        }
+
+        if ($user->hasRole('commercial')) {
+            $query->where('user_id', $user->id);
         }
 
         if ($request->filled('statut')) {
