@@ -20,7 +20,11 @@ export default function VentesListe() {
   // Tableau 6 du mémoire : "Créer vente"/"Encaisser"/"Générer PDF" = Gérant + Commercial
   // uniquement. Le Gestionnaire a "Consulter l'historique des ventes" (lecture seule).
   const peutVendre = ['gerant', 'commercial'].includes(user?.role?.nom);
-  const estGerant = user?.role?.nom === 'gerant';
+  // Le Gérant ET le Gestionnaire voient toutes les ventes de la boutique
+  // (le Gestionnaire en lecture seule : pas de bouton "Nouvelle vente" ni
+  // "Imprimer" pour lui, cf. peutVendre ci-dessus). Seul le Commercial est
+  // restreint à ses propres ventes.
+  const peutVoirToutesLesVentes = ['gerant', 'gestionnaire'].includes(user?.role?.nom);
 
   useEffect(() => {
     api
@@ -29,14 +33,14 @@ export default function VentesListe() {
       .catch(() => setErreur("Impossible de charger les ventes."));
   }, [boutiqueActiveId]);
 
-  // Portée de visibilité : le Gérant voit toutes les ventes de la boutique,
-  // le Commercial ne voit que les ventes qu'il a lui-même enregistrées
-  // (champ Commande.user_id, cf. VenteController@store). Ce filtre est
-  // redondant avec le scope équivalent dans VenteController@index — c'est
-  // ce scope côté serveur qui fait foi pour la sécurité, celui-ci n'est
-  // qu'un garde-fou d'affichage.
+  // Portée de visibilité : le Gérant et le Gestionnaire voient toutes les
+  // ventes de la boutique, le Commercial ne voit que les ventes qu'il a
+  // lui-même enregistrées (champ Commande.user_id, cf. VenteController@store).
+  // Ce filtre est redondant avec le scope équivalent dans
+  // VenteController@index — c'est ce scope côté serveur qui fait foi pour la
+  // sécurité, celui-ci n'est qu'un garde-fou d'affichage.
   const ventesVisibles = (ventes || []).filter((v) =>
-    estGerant ? true : v.user_id === user?.id
+    peutVoirToutesLesVentes ? true : v.user_id === user?.id
   );
 
   const ventesFiltrees = ventesVisibles.filter((v) => {
